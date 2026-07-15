@@ -26,3 +26,4 @@ Never edit or delete an existing entry.
 
 ## Phase 5 — Add Expense
 - START: 2026-07-15T03:53:46Z — agent: claude — Beginning Phase 5.
+- FINISH: 2026-07-15T03:56:45Z — agent: claude — Tests: 60 passed, 0 failed. tsc clean. Files: src/lib/money.ts, src/lib/dates.ts, src/lib/expense-validation.ts, src/lib/add-transaction-state.ts, src/db/expenses.ts, app/(tabs)/add.tsx, src/types/index.ts, __tests__/money.test.ts, __tests__/expense-validation.test.ts, __tests__/add-transaction-state.test.ts, __tests__/expenses-db.test.ts

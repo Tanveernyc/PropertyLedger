@@ -30,6 +30,33 @@ export interface Category {
   created_at: string;
 }
 
+/** A row in the expenses table. */
+export interface Expense {
+  id: string;
+  user_id: string;
+  property_id: string;
+  category_id: string;
+  amount: number;
+  paid_on: string;
+  period_start: string | null;
+  period_end: string | null;
+  vendor: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+/** Client-supplied fields when creating an expense. */
+export interface NewExpense {
+  property_id: string;
+  category_id: string;
+  amount: number;
+  paid_on: string;
+  period_start?: string | null;
+  period_end?: string | null;
+  vendor?: string | null;
+  notes?: string | null;
+}
+
 /** Client-supplied fields when creating a property (id/user_id/created_at are server-side). */
 export interface NewProperty {
   name: string;

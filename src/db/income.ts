@@ -15,6 +15,16 @@ export async function createIncome(input: NewIncome): Promise<Income> {
   return data as Income;
 }
 
+/** Every income row the user owns (RLS-scoped) — feeds the P&L/report math. */
+export async function listAllIncome(): Promise<Income[]> {
+  const { data, error } = await supabase
+    .from('income')
+    .select('*')
+    .order('received_on', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as Income[];
+}
+
 /** All income for a property, newest received_on first (timeline source). */
 export async function listPropertyIncome(propertyId: string): Promise<Income[]> {
   const { data, error } = await supabase

@@ -15,6 +15,16 @@ export async function createExpense(input: NewExpense): Promise<Expense> {
   return data as Expense;
 }
 
+/** Every expense the user owns (RLS-scoped) — feeds the P&L/report math. */
+export async function listAllExpenses(): Promise<Expense[]> {
+  const { data, error } = await supabase
+    .from('expenses')
+    .select('*')
+    .order('paid_on', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as Expense[];
+}
+
 /** All expenses for a property, newest paid_on first (timeline source). */
 export async function listPropertyExpenses(propertyId: string): Promise<Expense[]> {
   const { data, error } = await supabase

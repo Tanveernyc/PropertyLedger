@@ -14,3 +14,39 @@ export async function createIncome(input: NewIncome): Promise<Income> {
   if (error) throw error;
   return data as Income;
 }
+
+/** All income for a property, newest received_on first (timeline source). */
+export async function listPropertyIncome(propertyId: string): Promise<Income[]> {
+  const { data, error } = await supabase
+    .from('income')
+    .select('*')
+    .eq('property_id', propertyId)
+    .order('received_on', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as Income[];
+}
+
+/** One income entry by id (for the edit screen). */
+export async function getIncome(id: string): Promise<Income> {
+  const { data, error } = await supabase.from('income').select('*').eq('id', id).single();
+  if (error) throw error;
+  return data as Income;
+}
+
+/** Updates editable fields on an income entry. */
+export async function updateIncome(id: string, patch: Partial<NewIncome>): Promise<Income> {
+  const { data, error } = await supabase
+    .from('income')
+    .update(patch)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as Income;
+}
+
+/** Deletes an income entry. Callers must confirm first (confirmDelete, spec §5 Phase 7). */
+export async function deleteIncome(id: string): Promise<void> {
+  const { error } = await supabase.from('income').delete().eq('id', id);
+  if (error) throw error;
+}

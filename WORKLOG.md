@@ -34,3 +34,4 @@ Never edit or delete an existing entry.
 
 ## Phase 7 — Transaction List & Edit
 - START: 2026-07-15T04:00:36Z — agent: claude — Beginning Phase 7.
+- FINISH: 2026-07-15T04:06:37Z — agent: claude — Tests: 73 passed, 0 failed. tsc clean. Files: src/lib/timeline.ts, src/lib/confirm-delete.ts, src/db/expenses.ts, src/db/income.ts, app/property/[id]/index.tsx (timeline + filters + swipe-delete), app/property/[id]/edit.tsx (moved), app/transaction/[kind]/[id].tsx, app/_layout.tsx (GestureHandlerRootView), __tests__/timeline.test.ts, __tests__/confirm-delete.test.ts. Note: react-native-gesture-handler installed with --legacy-peer-deps (react-dom peer conflict), @react-native/jest-preset added for jest-expo.

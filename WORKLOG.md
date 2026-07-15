@@ -31,3 +31,6 @@ Never edit or delete an existing entry.
 ## Phase 6 — Add Income
 - START: 2026-07-15T03:57:24Z — agent: claude — Beginning Phase 6.
 - FINISH: 2026-07-15T03:59:34Z — agent: claude — Tests: 63 passed, 0 failed. tsc clean. Files: src/db/income.ts, src/components/add-transaction-form.tsx (shared expense/income form), app/(tabs)/add.tsx (segmented toggle), src/types/index.ts, __tests__/income-db.test.ts
+
+## Phase 7 — Transaction List & Edit
+- START: 2026-07-15T04:00:36Z — agent: claude — Beginning Phase 7.

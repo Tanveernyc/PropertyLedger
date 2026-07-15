@@ -10,6 +10,7 @@ export interface TimelineEntry {
   /** paid_on for expenses, received_on for income. */
   date: string;
   amount: number;
+  property_id: string;
   category_id: string;
   /** vendor for expenses, source for income. */
   party: string | null;
@@ -24,6 +25,7 @@ export function expenseToEntry(expense: Expense): TimelineEntry {
     id: expense.id,
     date: expense.paid_on,
     amount: expense.amount,
+    property_id: expense.property_id,
     category_id: expense.category_id,
     party: expense.vendor,
     notes: expense.notes,
@@ -38,6 +40,7 @@ export function incomeToEntry(income: Income): TimelineEntry {
     id: income.id,
     date: income.received_on,
     amount: income.amount,
+    property_id: income.property_id,
     category_id: income.category_id,
     party: income.source,
     notes: income.notes,

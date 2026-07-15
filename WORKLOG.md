@@ -46,3 +46,4 @@ Never edit or delete an existing entry.
 
 ## Phase 10 — Export
 - START: 2026-07-15T13:31:59Z — agent: claude — Beginning Phase 10.
+- FINISH: 2026-07-15T13:34:44Z — agent: claude — Tests: 103 passed, 0 failed. tsc clean. Files: src/lib/export.ts, app/export.tsx (share sheet), src/lib/timeline.ts (property_id on entries), app/_layout.tsx, app/(tabs)/index.tsx, __tests__/export.test.ts. Deps: expo-file-system, expo-sharing.

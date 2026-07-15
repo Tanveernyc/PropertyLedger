@@ -15,6 +15,9 @@ export default function DashboardScreen() {
       <Link href="/categories" style={styles.link}>
         Manage categories
       </Link>
+      <Link href="/export" style={styles.link}>
+        Export all data
+      </Link>
       <Pressable style={styles.signOut} onPress={() => supabase.auth.signOut()}>
         <Text style={styles.signOutText}>Sign Out</Text>
       </Pressable>

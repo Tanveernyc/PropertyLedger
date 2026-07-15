@@ -19,3 +19,6 @@ Never edit or delete an existing entry.
 ## Phase 3 — Properties CRUD
 - START: 2026-07-15T03:45:03Z — agent: claude — Beginning Phase 3.
 - FINISH: 2026-07-15T03:49:12Z — agent: claude — Tests: 30 passed, 0 failed. tsc clean. Live E2E: insert 201, owner list 1 row, archive via UPDATE ok, anon sees 0 rows (RLS enforced), temp user cleaned up. Files: src/types/index.ts, src/lib/property-validation.ts, src/db/properties.ts, src/components/property-form.tsx, app/(tabs)/properties.tsx, app/property/new.tsx, app/property/[id].tsx, app/_layout.tsx, __tests__/property-validation.test.ts, __tests__/properties-db.test.ts
+
+## Phase 4 — Categories
+- START: 2026-07-15T03:50:00Z — agent: claude — Beginning Phase 4.

@@ -43,3 +43,6 @@ Never edit or delete an existing entry.
 ## Phase 9 — History & Trends
 - START: 2026-07-15T04:10:41Z — agent: claude — Beginning Phase 9.
 - FINISH: 2026-07-15T13:31:10Z — agent: claude — Tests: 97 passed, 0 failed. tsc clean. Files: src/lib/aggregate.ts (calcCategoryTrend), app/history.tsx (chart + period table), app/(tabs)/reports.tsx (link), app/_layout.tsx, __tests__/trend.test.ts. Note: react-native-reanimated + @shopify/react-native-skia installed as victory-native peers.
+
+## Phase 10 — Export
+- START: 2026-07-15T13:31:59Z — agent: claude — Beginning Phase 10.

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "propertyledger",
+    "name": "PropertyLedger",
     "slug": "propertyledger",
     "version": "1.0.0",
     "scheme": "propertyledger",
@@ -8,7 +8,9 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.trueorganichub.propertyledger",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
@@ -24,6 +26,13 @@
     },
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "23ab3b7d-2539-444c-a4ec-985427a884d3"
+      }
+    },
+    "owner": "trueorganichub"
   }
 }

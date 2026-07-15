@@ -11,3 +11,6 @@ Never edit or delete an existing entry.
 ## Phase 1 — Supabase Project & Schema
 - START: 2026-07-15T02:55:19Z — agent: claude — Beginning Phase 1.
 - FINISH: 2026-07-15T03:37:15Z — agent: claude — Tests: 5 passed, 0 failed. tsc clean. Supabase project dxjwyaldmxquuztmnrsb created (us-east-1); schema + seed applied; RLS verified enabled on all 4 tables (policies: properties 1, categories 4, expenses 1, income 1); 36 system categories seeded; .env filled (gitignored). Files: supabase/schema.sql, supabase/seed_categories.sql, src/db/supabase.ts, __tests__/supabase.test.ts, jest.setup.js
+
+## Phase 2 — Auth
+- START: 2026-07-15T03:38:36Z — agent: claude — Beginning Phase 2.

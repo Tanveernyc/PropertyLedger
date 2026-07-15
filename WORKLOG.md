@@ -39,3 +39,6 @@ Never edit or delete an existing entry.
 ## Phase 8 — P&L Calculations
 - START: 2026-07-15T04:07:25Z — agent: claude — Beginning Phase 8.
 - FINISH: 2026-07-15T04:09:43Z — agent: claude — Tests: 88 passed, 0 failed. tsc clean. Cents-based math (float-drift test included). Files: src/lib/aggregate.ts, app/(tabs)/reports.tsx, app/(tabs)/_layout.tsx, src/db/expenses.ts (listAllExpenses), src/db/income.ts (listAllIncome), __tests__/aggregate.test.ts
+
+## Phase 9 — History & Trends
+- START: 2026-07-15T04:10:41Z — agent: claude — Beginning Phase 9.

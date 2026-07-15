@@ -57,6 +57,29 @@ export interface NewExpense {
   notes?: string | null;
 }
 
+/** A row in the income table. */
+export interface Income {
+  id: string;
+  user_id: string;
+  property_id: string;
+  category_id: string;
+  amount: number;
+  received_on: string;
+  source: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+/** Client-supplied fields when creating an income entry. */
+export interface NewIncome {
+  property_id: string;
+  category_id: string;
+  amount: number;
+  received_on: string;
+  source?: string | null;
+  notes?: string | null;
+}
+
 /** Client-supplied fields when creating a property (id/user_id/created_at are server-side). */
 export interface NewProperty {
   name: string;

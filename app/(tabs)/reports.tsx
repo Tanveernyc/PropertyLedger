@@ -1,6 +1,7 @@
 // Reports tab (Phase 8): portfolio-wide and per-property P&L for
 // This Year / Last Year / All Time / Custom, plus expense-by-category totals.
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ScrollView, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { listCategories } from '@/db/categories';
@@ -112,6 +113,10 @@ export default function ReportsScreen() {
         </View>
       ))}
 
+      <Link href="/history" style={styles.historyLink}>
+        History &amp; trends — “did my insurance go up?” →
+      </Link>
+
       <Text style={styles.sectionTitle}>Expenses by category</Text>
       <View style={styles.card}>
         {byCategory.length === 0 ? (
@@ -185,4 +190,5 @@ const styles = StyleSheet.create({
   bold: { fontWeight: '700' },
   divider: { height: StyleSheet.hairlineWidth, backgroundColor: '#ddd', marginVertical: 4 },
   emptyText: { color: '#888' },
+  historyLink: { color: '#2563eb', fontSize: 14, marginTop: 8 },
 });

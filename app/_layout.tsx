@@ -29,6 +29,7 @@ function RootNavigator() {
         <Stack.Screen name="property/[id]/edit" options={{ title: 'Edit Property' }} />
         <Stack.Screen name="transaction/[kind]/[id]" options={{ title: 'Edit Transaction' }} />
         <Stack.Screen name="categories" options={{ title: 'Categories' }} />
+        <Stack.Screen name="history" options={{ title: 'History & Trends' }} />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)/sign-in" options={{ headerShown: false }} />

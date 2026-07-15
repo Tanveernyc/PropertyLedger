@@ -98,6 +98,57 @@ export function calcPLByProperty(
   });
 }
 
+export interface TrendPoint {
+  /** '2026' (year grouping) or '2026-03' (month grouping). */
+  period: string;
+  total: number;
+  /** Dollars vs the previous period with data; null for the first period —
+   * absence of data is not "no change" (spec §5 Phase 9). */
+  changeFromPrev: number | null;
+  /** Percent vs previous period; null for the first period AND when the
+   * previous total is 0 (division-by-zero guard). */
+  pctChangeFromPrev: number | null;
+}
+
+/**
+ * Multi-period trend for one expense category — the "did my insurance go up?"
+ * math (spec §5 Phase 9). Grouping date is period_start when present, else
+ * paid_on: a 2026 school-tax bill paid in Sep 2025 belongs to 2026 (spec §3).
+ * Gap periods (a year with no bills) are skipped; each point compares to the
+ * previous period that actually has data.
+ */
+export function calcCategoryTrend(
+  expenses: Expense[],
+  categoryId: string,
+  groupBy: 'year' | 'month'
+): TrendPoint[] {
+  const periodLength = groupBy === 'year' ? 4 : 7; // YYYY vs YYYY-MM
+  const centsByPeriod = new Map<string, number>();
+  for (const e of expenses) {
+    if (e.category_id !== categoryId) continue;
+    const groupDate = e.period_start ?? e.paid_on;
+    const period = groupDate.slice(0, periodLength);
+    centsByPeriod.set(period, (centsByPeriod.get(period) ?? 0) + toCents(e.amount));
+  }
+
+  const periods = [...centsByPeriod.keys()].sort(); // ISO prefixes sort chronologically
+  return periods.map((period, index) => {
+    const cents = centsByPeriod.get(period)!;
+    if (index === 0) {
+      return { period, total: toDollars(cents), changeFromPrev: null, pctChangeFromPrev: null };
+    }
+    const prevCents = centsByPeriod.get(periods[index - 1])!;
+    const changeCents = cents - prevCents;
+    return {
+      period,
+      total: toDollars(cents),
+      changeFromPrev: toDollars(changeCents),
+      // Guard: a 0 previous period makes % change undefined, not Infinity.
+      pctChangeFromPrev: prevCents === 0 ? null : (changeCents / prevCents) * 100,
+    };
+  });
+}
+
 /** Preset: This Year — Jan 1 through Dec 31 of today's year. */
 export function thisYearRange(todayIso: string): DateRange {
   const year = todayIso.slice(0, 4);

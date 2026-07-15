@@ -25,6 +25,7 @@ function RootNavigator() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="property/new" options={{ title: 'New Property', presentation: 'modal' }} />
         <Stack.Screen name="property/[id]" options={{ title: 'Property' }} />
+        <Stack.Screen name="categories" options={{ title: 'Categories' }} />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)/sign-in" options={{ headerShown: false }} />

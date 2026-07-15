@@ -22,3 +22,4 @@ Never edit or delete an existing entry.
 
 ## Phase 4 — Categories
 - START: 2026-07-15T03:50:00Z — agent: claude — Beginning Phase 4.
+- FINISH: 2026-07-15T03:52:26Z — agent: claude — Tests: 41 passed, 0 failed. tsc clean. Live E2E: 36 system categories visible, custom create/rename/delete ok, system delete blocked by RLS (0 rows affected, row survives). Files: src/lib/categories.ts, src/db/categories.ts, app/categories.tsx, src/types/index.ts, app/_layout.tsx, app/(tabs)/index.tsx, __tests__/categories-lib.test.ts, __tests__/categories-db.test.ts

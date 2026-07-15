@@ -17,6 +17,19 @@ export interface Property {
   created_at: string;
 }
 
+/** Which ledger a category belongs to. */
+export type CategoryKind = 'expense' | 'income';
+
+/** A row in the categories table. System rows (user_id null) are seeded and undeletable. */
+export interface Category {
+  id: string;
+  user_id: string | null;
+  name: string;
+  kind: CategoryKind;
+  is_system: boolean;
+  created_at: string;
+}
+
 /** Client-supplied fields when creating a property (id/user_id/created_at are server-side). */
 export interface NewProperty {
   name: string;

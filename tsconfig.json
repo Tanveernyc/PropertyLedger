@@ -3,6 +3,10 @@
   "compilerOptions": {
     "strict": true,
     // Expose jest globals (describe/it/expect) to the typechecker in test files.
-    "types": ["jest"]
+    "types": ["jest"],
+    // "@/..." resolves to src/ — prefer aliases over deep relative imports.
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   }
 }

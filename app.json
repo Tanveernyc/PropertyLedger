@@ -3,6 +3,7 @@
     "name": "propertyledger",
     "slug": "propertyledger",
     "version": "1.0.0",
+    "scheme": "propertyledger",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -20,6 +21,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-router"
+    ]
   }
 }

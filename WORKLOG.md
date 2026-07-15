@@ -14,3 +14,4 @@ Never edit or delete an existing entry.
 
 ## Phase 2 — Auth
 - START: 2026-07-15T03:38:36Z — agent: claude — Beginning Phase 2.
+- FINISH: 2026-07-15T03:43:11Z — agent: claude — Tests: 17 passed, 0 failed. tsc clean. Live signup E2E verified (session returned, autoconfirm on, throwaway user cleaned up). Files: app/_layout.tsx, app/(auth)/sign-in.tsx, app/(tabs)/_layout.tsx, app/(tabs)/index.tsx, src/lib/auth-validation.ts, src/lib/auth-guard.ts, src/components/session-provider.tsx, __tests__/auth-validation.test.ts, __tests__/auth-guard.test.ts

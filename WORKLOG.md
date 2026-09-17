@@ -54,3 +54,7 @@ Never edit or delete an existing entry.
 
 ## Phase 12 — Ship
 - START: 2026-07-15T13:41:49Z — agent: claude — Beginning Phase 12.
+
+## Phase 13 — Account Deletion
+- START: 2026-09-17T20:58:00Z — agent: claude — Beginning Phase 13. Required by App Store Review Guideline 5.1.1(v): the app offered account creation but no in-app deletion, blocking submission for review.
+- FINISH: 2026-09-17T21:49:32Z — agent: claude — Tests: 126 passed, 0 failed (22 suites). tsc clean. Live E2E verified against project dxjwyaldmxquuztmnrsb: throwaway user + property + expense created, edge function returned {"ok":true}, subsequent sign-in rejected ("Invalid login credentials"), 0 rows visible to anon — cascade confirmed. Unauthenticated POST to the function returns 401. Files: src/lib/delete-account.ts, src/db/account.ts, app/delete-account.tsx, supabase/functions/delete-account/index.ts (deployed), app/_layout.tsx (route), app/(tabs)/index.tsx (entry link), tsconfig.json (exclude Deno fn + restore expo base entries), __tests__/delete-account.test.ts, __tests__/account-db.test.ts, __tests__/delete-account-screen.test.tsx. Spec: docs/superpowers/specs/2026-09-17-account-deletion-design.md. Plan: docs/superpowers/plans/2026-09-17-account-deletion.md. Note: manual on-device walkthrough (plan Task 4 Step 9) not yet performed; the feature is covered by unit, mocked, and live end-to-end verification but has not been tapped through in a simulator.

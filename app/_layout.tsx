@@ -31,6 +31,7 @@ function RootNavigator() {
         <Stack.Screen name="categories" options={{ title: 'Categories' }} />
         <Stack.Screen name="history" options={{ title: 'History & Trends' }} />
         <Stack.Screen name="export" options={{ title: 'Export' }} />
+        <Stack.Screen name="delete-account" options={{ title: 'Delete Account' }} />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)/sign-in" options={{ headerShown: false }} />

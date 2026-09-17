@@ -8,5 +8,7 @@
     "paths": {
       "@/*": ["./src/*"]
     }
-  }
+  },
+  // Edge Functions run on Deno, not in the RN bundle — excluded from app typechecking.
+  "exclude": ["node_modules", "supabase/functions"]
 }

@@ -30,6 +30,9 @@ yarn-error.*
 .DS_Store
 *.pem
 
+# store submission credentials — NEVER commit (repo is public)
+google-service-account.json
+
 # local env files — NEVER commit secrets (Supabase keys live in .env; see spec §0.3)
 .env
 .env.local

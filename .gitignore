@@ -33,6 +33,9 @@ yarn-error.*
 # store submission credentials — NEVER commit (repo is public)
 google-service-account.json
 
+# subagent-driven-development scratch (ledgers, briefs, review packages)
+.superpowers/
+
 # local env files — NEVER commit secrets (Supabase keys live in .env; see spec §0.3)
 .env
 .env.local

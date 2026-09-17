@@ -32,6 +32,7 @@
 | `app/(tabs)/index.tsx` (modify) | "Delete account" link in the footer. |
 | `__tests__/delete-account.test.ts` (create) | Unit tests for the confirmation check. |
 | `__tests__/account-db.test.ts` (create) | Mocked tests for `deleteAccount`, including the invariant guard. |
+| `__tests__/delete-account-screen.test.tsx` (create) | Render tests for the confirmation screen. |
 
 ---
 
@@ -411,6 +412,7 @@ deliberately absent from this repo).
 - Create: `app/delete-account.tsx`
 - Modify: `app/_layout.tsx:33` (add a `Stack.Screen` after the `export` entry)
 - Modify: `app/(tabs)/index.tsx:47-57` (footer links) and `:75` (footer link styles)
+- Test: `__tests__/delete-account-screen.test.tsx`
 
 **Interfaces:**
 - Consumes: `isDeleteConfirmed` (Task 1), `deleteAccount` (Task 3)
@@ -565,25 +567,89 @@ style (currently line 75) to:
   footerLinks: { flexDirection: 'row', gap: 14, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' },
 ```
 
-- [ ] **Step 4: Typecheck**
+- [ ] **Step 4: Write the screen test**
+
+Mirrors the render-test pattern already used in `__tests__/dashboard.test.tsx`
+(RNTL v14 — `render` is awaited).
+
+Create `__tests__/delete-account-screen.test.tsx`:
+
+```tsx
+// Phase 13 tests — the delete confirmation screen. The button must stay
+// disabled until the word is typed, and a failed delete must surface the error
+// rather than leaving the user with a silent no-op.
+jest.mock('../src/db/account', () => ({ deleteAccount: jest.fn() }));
+
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import DeleteAccountScreen from '../app/delete-account';
+import { deleteAccount } from '../src/db/account';
+
+const mockDeleteAccount = deleteAccount as jest.Mock;
+
+beforeEach(() => {
+  mockDeleteAccount.mockReset();
+  mockDeleteAccount.mockResolvedValue({ error: null });
+});
+
+describe('DeleteAccountScreen', () => {
+  it('disables the button until the confirmation word is typed', async () => {
+    const { getByTestId } = await render(<DeleteAccountScreen />);
+    expect(getByTestId('delete-button').props.accessibilityState.disabled).toBe(true);
+
+    fireEvent.changeText(getByTestId('confirmation-input'), 'DELE');
+    expect(getByTestId('delete-button').props.accessibilityState.disabled).toBe(true);
+
+    fireEvent.changeText(getByTestId('confirmation-input'), 'DELETE');
+    expect(getByTestId('delete-button').props.accessibilityState.disabled).toBe(false);
+  });
+
+  it('does not call deleteAccount while the button is disabled', async () => {
+    const { getByTestId } = await render(<DeleteAccountScreen />);
+    fireEvent.press(getByTestId('delete-button'));
+    expect(mockDeleteAccount).not.toHaveBeenCalled();
+  });
+
+  it('calls deleteAccount once confirmed', async () => {
+    const { getByTestId } = await render(<DeleteAccountScreen />);
+    fireEvent.changeText(getByTestId('confirmation-input'), 'DELETE');
+    fireEvent.press(getByTestId('delete-button'));
+    await waitFor(() => expect(mockDeleteAccount).toHaveBeenCalledTimes(1));
+  });
+
+  it('shows the error and stays put when the delete fails', async () => {
+    mockDeleteAccount.mockResolvedValue({ error: 'Network unreachable' });
+    const { getByTestId, getByText } = await render(<DeleteAccountScreen />);
+    fireEvent.changeText(getByTestId('confirmation-input'), 'DELETE');
+    fireEvent.press(getByTestId('delete-button'));
+    await waitFor(() => expect(getByText('Network unreachable')).toBeTruthy());
+  });
+});
+```
+
+- [ ] **Step 5: Run the screen test**
+
+Run: `npx jest __tests__/delete-account-screen.test.tsx`
+Expected: PASS, 4 tests
+
+- [ ] **Step 6: Typecheck**
 
 Run: `npx tsc --noEmit`
 Expected: silent
 
-- [ ] **Step 5: Run the full suite**
+- [ ] **Step 7: Run the full suite**
 
 Run: `npm test`
-Expected: 120 tests passing, no regressions in `__tests__/dashboard.test.tsx`
+Expected: 124 tests passing, no regressions in `__tests__/dashboard.test.tsx`
 (that suite renders the dashboard, which this task modifies)
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
-git add app/delete-account.tsx app/_layout.tsx "app/(tabs)/index.tsx"
+git add app/delete-account.tsx app/_layout.tsx "app/(tabs)/index.tsx" __tests__/delete-account-screen.test.tsx
 git commit -m "phase-13: delete account screen, route, and dashboard entry point"
 ```
 
-- [ ] **Step 7: Verify in the running app**
+- [ ] **Step 9: Verify in the running app**
 
 Run: `npm start`
 
@@ -600,7 +666,7 @@ Check, in order:
 
 ## Done when
 
-- `npm test` passes with 120 tests
+- `npm test` passes with 124 tests
 - `npx tsc --noEmit` is silent
 - The Edge Function is deployed and returns 401 to an unauthenticated POST
 - The live check in Task 3 Step 7 prints `REJECTED — account gone`

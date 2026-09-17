@@ -23,7 +23,8 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "support@trueorganichub.com"
+        "appleId": "support@trueorganichub.com",
+        "ascAppId": "6813181506"
       },
       "android": {
         "serviceAccountKeyPath": "./google-service-account.json",

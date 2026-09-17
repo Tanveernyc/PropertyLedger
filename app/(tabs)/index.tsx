@@ -54,6 +54,9 @@ export default function DashboardScreen() {
           <Pressable onPress={() => supabase.auth.signOut()}>
             <Text style={styles.signOut}>Sign out</Text>
           </Pressable>
+          <Link href="/delete-account" style={styles.signOut}>
+            Delete account
+          </Link>
         </View>
       </View>
     </View>
@@ -72,7 +75,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerText: { fontSize: 12, color: '#999' },
-  footerLinks: { flexDirection: 'row', gap: 14, alignItems: 'center' },
+  footerLinks: { flexDirection: 'row', gap: 14, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' },
   link: { color: '#2563eb', fontSize: 13 },
   signOut: { color: '#c0392b', fontSize: 13 },
 });

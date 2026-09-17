@@ -10,5 +10,16 @@
     }
   },
   // Edge Functions run on Deno, not in the RN bundle — excluded from app typechecking.
-  "exclude": ["node_modules", "supabase/functions"]
+  // TypeScript replaces (rather than merges) `exclude` from the base config, so we
+  // re-list expo/tsconfig.base's entries here alongside our own, or `expo prebuild`
+  // would pull android/ and ios/ into the program.
+  "exclude": [
+    "node_modules",
+    "babel.config.js",
+    "metro.config.js",
+    "jest.config.js",
+    "android",
+    "ios",
+    "supabase/functions"
+  ]
 }

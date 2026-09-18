@@ -19,7 +19,9 @@ function RootNavigator() {
   const signedIn = isSignedIn(session);
 
   return (
-    <Stack>
+    // Minimal back buttons: the default would echo the previous screen's title,
+    // and for pushes out of the tab group that title is the route-group name "(tabs)".
+    <Stack screenOptions={{ headerBackButtonDisplayMode: 'minimal' }}>
       {/* Protected guards redirect to the first available screen when they fail,
           so a null session always lands on (auth)/sign-in. */}
       <Stack.Protected guard={signedIn}>

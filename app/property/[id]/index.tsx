@@ -175,7 +175,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   header: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 16, paddingTop: 8 },
   editLink: { color: '#2563eb', fontSize: 14 },
-  chipStrip: { flexGrow: 0 },
+  // ScrollView defaults to flexShrink: 1, which lets the column squash the strip
+  // under the date row; pin it to its content height.
+  chipStrip: { flexGrow: 0, flexShrink: 0 },
   chipRow: { gap: 6, paddingHorizontal: 12, paddingVertical: 8 },
   chip: {
     borderWidth: 1,

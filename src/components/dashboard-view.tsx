@@ -11,6 +11,8 @@ interface Props {
   model: DashboardModel;
   /** category_id → display name (falls back to the id when unknown). */
   categoryNames: Map<string, string>;
+  /** "Properties" / "Budgets" / "Ledgers" — matches the tab's title (spec §3). */
+  collectionTitle: string;
   onQuickAdd: () => void;
   onOpenProperty: (propertyId: string) => void;
   onOpenTransaction: (entry: TimelineEntry) => void;
@@ -19,11 +21,12 @@ interface Props {
 export function DashboardView({
   model,
   categoryNames,
+  collectionTitle,
   onQuickAdd,
   onOpenProperty,
   onOpenTransaction,
 }: Props) {
-  const { yearPL, propertyCards, recent } = model;
+  const { yearPL, monthPL, monthSavingsRate, propertyCards, recent } = model;
 
   return (
     <ScrollView contentContainerStyle={styles.container} testID="dashboard">
@@ -37,15 +40,23 @@ export function DashboardView({
           <Text style={styles.netBreakdown}>In {formatMoney(yearPL.totalIncome)}</Text>
           <Text style={styles.netBreakdown}>Out {formatMoney(yearPL.totalExpense)}</Text>
         </View>
+        <Text style={styles.netMonth}>
+          This month {formatMoney(monthPL.net)}
+          {monthSavingsRate !== null
+            ? ` · ${monthSavingsRate >= 0 ? 'saved' : 'over by'} ${Math.abs(Math.round(monthSavingsRate * 100))}%`
+            : ''}
+        </Text>
       </View>
 
       <Pressable style={styles.quickAdd} onPress={onQuickAdd} accessibilityLabel="Quick add">
         <Text style={styles.quickAddText}>Add expense or income</Text>
       </Pressable>
 
-      <Text style={styles.sectionTitle}>Properties</Text>
+      <Text style={styles.sectionTitle}>{collectionTitle}</Text>
       {propertyCards.length === 0 ? (
-        <Text style={styles.empty}>No properties yet - add one on the Properties tab.</Text>
+        <Text style={styles.empty}>
+          No {collectionTitle.toLowerCase()} yet - add one on the {collectionTitle} tab.
+        </Text>
       ) : (
         propertyCards.map((card) => (
           <Pressable
@@ -104,6 +115,7 @@ const styles = StyleSheet.create({
   netNegative: { color: '#F2B8B5' },
   netRow: { flexDirection: 'row', gap: 16, marginTop: 2 },
   netBreakdown: { ...money, color: '#B8C0D0', fontSize: 13, fontWeight: '500' },
+  netMonth: { ...money, color: '#B8C0D0', fontSize: 13, fontWeight: '500', marginTop: 6 },
   quickAdd: { ...ui.buttonSecondary },
   quickAddText: { ...ui.buttonSecondaryText, color: colors.brass },
   sectionTitle: { ...type.title, fontSize: 17, marginTop: 8 },

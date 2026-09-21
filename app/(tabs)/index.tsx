@@ -13,6 +13,7 @@ import { listProperties } from '@/db/properties';
 import { supabase } from '@/db/supabase';
 import { buildDashboardModel } from '@/lib/dashboard';
 import { todayISO } from '@/lib/dates';
+import { collectionTitle, kindsOf } from '@/lib/ledger-copy';
 import { colors, radius, ui } from '@/theme';
 
 const SUPPORT_EMAIL = 'support@trueorganichub.com';
@@ -44,6 +45,7 @@ export default function DashboardScreen() {
       <DashboardView
         model={model}
         categoryNames={categoryNames}
+        collectionTitle={collectionTitle(kindsOf(properties ?? []))}
         onQuickAdd={() => router.push('/add')}
         onOpenProperty={(id) => router.push({ pathname: '/property/[id]', params: { id } })}
         onOpenTransaction={(entry) =>

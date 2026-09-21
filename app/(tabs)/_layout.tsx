@@ -2,11 +2,13 @@
 // guards it), so it is also where the recurring catch-up runs once per launch
 // (README §4.2): post any months that became due since the app last opened.
 import { Ionicons } from '@expo/vector-icons';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Tabs } from 'expo-router';
 import { useEffect } from 'react';
 import type { ColorValue } from 'react-native';
+import { listProperties } from '@/db/properties';
 import { syncRecurringEntries } from '@/db/recurring';
+import { collectionTitle, kindsOf } from '@/lib/ledger-copy';
 import { colors } from '@/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -20,6 +22,12 @@ function tabIcon(idle: IconName, active: IconName) {
 
 export default function TabsLayout() {
   const queryClient = useQueryClient();
+
+  const { data: ledgers } = useQuery({
+    queryKey: ['properties', { includeArchived: false }],
+    queryFn: () => listProperties(),
+  });
+  const ledgersTitle = collectionTitle(kindsOf(ledgers ?? []));
 
   useEffect(() => {
     let cancelled = false;
@@ -53,7 +61,7 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="properties"
-        options={{ title: 'Properties', tabBarIcon: tabIcon('home-outline', 'home') }}
+        options={{ title: ledgersTitle, tabBarIcon: tabIcon('home-outline', 'home') }}
       />
       <Tabs.Screen
         name="add"

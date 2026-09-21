@@ -118,6 +118,7 @@ describe('DashboardView', () => {
       <DashboardView
         model={model}
         categoryNames={new Map()}
+        collectionTitle="Ledgers"
         onQuickAdd={() => {}}
         onOpenProperty={() => {}}
         onOpenTransaction={() => {}}
@@ -125,7 +126,7 @@ describe('DashboardView', () => {
     );
     expect(getByTestId('dashboard')).toBeTruthy();
     expect(getByText('No transactions yet.')).toBeTruthy();
-    expect(getByText(/No properties yet/)).toBeTruthy();
+    expect(getByText(/No ledgers yet/i)).toBeTruthy();
   });
 
   it('renders populated data', async () => {
@@ -139,6 +140,7 @@ describe('DashboardView', () => {
       <DashboardView
         model={model}
         categoryNames={new Map([['c-ins', 'Insurance'], ['c-rent', 'Rent']])}
+        collectionTitle="Ledgers"
         onQuickAdd={() => {}}
         onOpenProperty={() => {}}
         onOpenTransaction={() => {}}
@@ -148,5 +150,6 @@ describe('DashboardView', () => {
     // Net appears on the portfolio card and the (only) property card.
     expect(getAllByText('$1,500.00').length).toBeGreaterThanOrEqual(1);
     expect(getByText('Insurance')).toBeTruthy(); // recent row category name
+    expect(getByText(/This month/)).toBeTruthy();
   });
 });

@@ -1,8 +1,9 @@
 // Properties tab (Phase 3): list with archived toggle, links to create and edit.
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'expo-router';
-import { FlatList, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, SectionList, StyleSheet, Switch, Text, View } from 'react-native';
 import { listProperties } from '@/db/properties';
+import { collectionTitle, kindsOf, nounFor } from '@/lib/ledger-copy';
 import type { Property } from '@/types';
 import { colors, radius, type, ui } from '@/theme';
 import { useState } from 'react';
@@ -15,6 +16,15 @@ export default function PropertiesScreen() {
     queryKey: ['properties', { includeArchived: showArchived }],
     queryFn: () => listProperties({ includeArchived: showArchived }),
   });
+
+  const kinds = kindsOf(data ?? []);
+  const sections =
+    kinds.length > 1
+      ? (['rental', 'personal'] as const).map((k) => ({
+          title: nounFor(k).many,
+          data: (data ?? []).filter((p) => p.property_type === k),
+        }))
+      : [{ title: '', data: data ?? [] }];
 
   return (
     <View style={styles.container}>
@@ -32,16 +42,21 @@ export default function PropertiesScreen() {
 
       {error ? <Text style={styles.error}>{(error as Error).message}</Text> : null}
 
-      <FlatList
+      <SectionList
         contentContainerStyle={styles.listContent}
-        data={data ?? []}
+        sections={sections}
         keyExtractor={(item) => item.id}
         refreshing={isPending}
         onRefresh={refetch}
+        renderSectionHeader={({ section }) =>
+          section.title === '' ? null : <Text style={styles.sectionHeader}>{section.title}</Text>
+        }
         ListEmptyComponent={
           isPending ? null : (
             <Text style={styles.empty}>
-              {showArchived ? 'No properties yet.' : 'No active properties. Add one to start.'}
+              {showArchived
+                ? 'Nothing here yet.'
+                : `No active ${collectionTitle(kinds).toLowerCase()}. Add one to start.`}
             </Text>
           )
         }
@@ -58,7 +73,7 @@ function PropertyRow({ property }: { property: Property }) {
         <View style={styles.rowText}>
           <Text style={styles.rowName}>{property.name}</Text>
           <Text style={styles.rowMeta}>
-            {property.property_type}
+            {property.property_type === 'personal' ? 'budget' : 'rental'}
             {property.address ? ` · ${property.address}` : ''}
           </Text>
         </View>
@@ -80,6 +95,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   toggleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  sectionHeader: { ...type.title, fontSize: 17, marginTop: 8 },
   toggleLabel: { ...type.label, fontSize: 14 },
   addButton: { backgroundColor: colors.ink, borderRadius: radius.control, paddingHorizontal: 14, paddingVertical: 8 },
   addButtonText: { color: colors.card, fontWeight: '600' },

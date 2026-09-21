@@ -13,14 +13,22 @@ import {
   View,
 } from 'react-native';
 import { createCategory, deleteCategory, listCategories, renameCategory } from '@/db/categories';
-import { canDeleteCategory, splitCategoriesByKind } from '@/lib/categories';
-import type { Category, CategoryKind } from '@/types';
+import { canDeleteCategory } from '@/lib/categories';
+import type { Category, CategoryKind, CategoryScope } from '@/types';
 import { colors, radius, type, ui } from '@/theme';
+
+const SCOPE_CYCLE: CategoryScope[] = ['both', 'rental', 'personal'];
+const SCOPE_LABELS: Record<CategoryScope, string> = {
+  both: 'Both',
+  rental: 'Rental',
+  personal: 'Personal',
+};
 
 export default function CategoriesScreen() {
   const queryClient = useQueryClient();
   const [newName, setNewName] = useState('');
   const [newKind, setNewKind] = useState<CategoryKind>('expense');
+  const [newScope, setNewScope] = useState<CategoryScope>('both');
 
   const { data, isPending, error } = useQuery({
     queryKey: ['categories'],
@@ -31,7 +39,7 @@ export default function CategoriesScreen() {
   const onError = (e: Error) => Alert.alert('Category error', e.message);
 
   const addMutation = useMutation({
-    mutationFn: () => createCategory(newName, newKind),
+    mutationFn: () => createCategory(newName, newKind, newScope),
     onSuccess: () => {
       setNewName('');
       invalidate();
@@ -54,11 +62,19 @@ export default function CategoriesScreen() {
   if (isPending) return <ActivityIndicator style={styles.spinner} />;
   if (error) return <Text style={styles.error}>{(error as Error).message}</Text>;
 
-  const byKind = splitCategoriesByKind(data ?? []);
-  const sections = [
-    { title: 'Expense categories', data: byKind.expense },
-    { title: 'Income categories', data: byKind.income },
+  const scopes: { scope: CategoryScope; label: string }[] = [
+    { scope: 'both', label: 'Shared' },
+    { scope: 'rental', label: 'Rental' },
+    { scope: 'personal', label: 'Personal' },
   ];
+  const sections = (['expense', 'income'] as const).flatMap((kind) =>
+    scopes
+      .map(({ scope, label }) => ({
+        title: `${label} ${kind} categories`,
+        data: (data ?? []).filter((c) => c.kind === kind && c.scope === scope),
+      }))
+      .filter((s) => s.data.length > 0)
+  );
 
   const promptRename = (category: Category) => {
     // Alert.prompt is iOS-only; this app is iOS-first (spec §1).
@@ -89,6 +105,15 @@ export default function CategoriesScreen() {
           accessibilityLabel="Toggle category kind"
         >
           <Text style={styles.kindChipText}>{newKind}</Text>
+        </Pressable>
+        <Pressable
+          style={styles.kindChip}
+          onPress={() =>
+            setNewScope(SCOPE_CYCLE[(SCOPE_CYCLE.indexOf(newScope) + 1) % SCOPE_CYCLE.length])
+          }
+          accessibilityLabel="Toggle category scope"
+        >
+          <Text style={styles.kindChipText}>{SCOPE_LABELS[newScope]}</Text>
         </Pressable>
         <Pressable
           style={styles.addButton}

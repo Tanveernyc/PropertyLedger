@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AddTransactionForm } from '@/components/add-transaction-form';
 import type { CategoryKind } from '@/types';
+import { colors, radius, ui } from '@/theme';
 
 export default function AddScreen() {
   const [kind, setKind] = useState<CategoryKind>('expense');
@@ -36,17 +37,11 @@ export default function AddScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  segment: {
-    flexDirection: 'row',
-    margin: 12,
-    borderRadius: 8,
-    backgroundColor: '#eee',
-    padding: 3,
-  },
-  segmentButton: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 6 },
-  segmentButtonActive: { backgroundColor: '#fff' },
-  segmentText: { color: '#666' },
-  segmentTextActive: { color: '#111', fontWeight: '600' },
-  recurringLink: { color: '#2563eb', fontSize: 13, textAlign: 'center', marginBottom: 4 },
+  container: { ...ui.screen },
+  segment: { flexDirection: 'row', margin: 12, borderRadius: radius.control, backgroundColor: colors.line, padding: 3 },
+  segmentButton: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8 },
+  segmentButtonActive: { backgroundColor: colors.card },
+  segmentText: { color: colors.slate },
+  segmentTextActive: { color: colors.ink, fontWeight: '600' },
+  recurringLink: { ...ui.link, fontSize: 13, textAlign: 'center', marginBottom: 4 },
 });

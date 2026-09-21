@@ -15,6 +15,7 @@ import {
 import { createCategory, deleteCategory, listCategories, renameCategory } from '@/db/categories';
 import { canDeleteCategory, splitCategoriesByKind } from '@/lib/categories';
 import type { Category, CategoryKind } from '@/types';
+import { colors, radius, type, ui } from '@/theme';
 
 export default function CategoriesScreen() {
   const queryClient = useQueryClient();
@@ -127,55 +128,28 @@ export default function CategoriesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { ...ui.screen },
   spinner: { marginTop: 40 },
-  error: { color: '#c0392b', padding: 16 },
+  error: { ...ui.error, padding: 16 },
   addRow: {
     flexDirection: 'row',
     gap: 8,
     padding: 12,
+    backgroundColor: colors.card,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#ddd',
+    borderBottomColor: colors.line,
     alignItems: 'center',
   },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  kindChip: {
-    borderWidth: 1,
-    borderColor: '#2563eb',
-    borderRadius: 14,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  kindChipText: { color: '#2563eb', fontSize: 13 },
-  addButton: { backgroundColor: '#2563eb', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
-  addButtonText: { color: '#fff', fontWeight: '600' },
-  sectionHeader: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#666',
-    backgroundColor: '#f6f6f6',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#eee',
-  },
-  rowName: { fontSize: 15 },
+  input: { ...ui.input, flex: 1, paddingVertical: 8 },
+  kindChip: { ...ui.chipActive, borderWidth: 1, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 6 },
+  kindChipText: { ...ui.chipTextActive },
+  addButton: { backgroundColor: colors.ink, borderRadius: radius.control, paddingHorizontal: 14, paddingVertical: 8 },
+  addButtonText: { color: colors.card, fontWeight: '600' },
+  sectionHeader: { ...type.label, fontWeight: '700', paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 },
+  row: { ...ui.row, justifyContent: 'space-between' },
+  rowName: { ...type.body },
   rowActions: { flexDirection: 'row', gap: 16 },
-  action: { color: '#2563eb', fontSize: 14 },
-  deleteAction: { color: '#c0392b' },
-  systemBadge: { fontSize: 12, color: '#999', fontStyle: 'italic' },
+  action: { ...ui.link },
+  deleteAction: { color: colors.danger },
+  systemBadge: { fontSize: 12, color: colors.mist, fontStyle: 'italic' },
 });

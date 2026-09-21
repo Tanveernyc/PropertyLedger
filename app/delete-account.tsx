@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { deleteAccount } from '@/db/account';
 import { CONFIRM_WORD, isDeleteConfirmed } from '@/lib/delete-account';
+import { colors, type, ui } from '@/theme';
 
 export default function DeleteAccountScreen() {
   const [confirmation, setConfirmation] = useState('');
@@ -87,29 +88,15 @@ export default function DeleteAccountScreen() {
 
 const styles = StyleSheet.create({
   container: { padding: 16, gap: 12 },
-  heading: { fontSize: 20, fontWeight: '700', color: '#111' },
-  body: { fontSize: 15, color: '#333' },
+  heading: { ...type.title },
+  body: { ...type.body },
   list: { gap: 4, paddingLeft: 4 },
-  listItem: { fontSize: 15, color: '#333' },
-  warning: { fontSize: 14, color: '#c0392b', lineHeight: 20 },
-  label: { fontSize: 13, color: '#666', marginTop: 4 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: '#111',
-  },
-  error: { color: '#c0392b', fontSize: 14 },
-  button: {
-    backgroundColor: '#c0392b',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  buttonDisabled: { backgroundColor: '#e2b3ad' },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  listItem: { ...type.body },
+  warning: { fontSize: 14, color: colors.danger, lineHeight: 20 },
+  label: { ...type.label, marginTop: 4 },
+  input: { ...ui.input, fontSize: 16 },
+  error: { ...ui.error, fontSize: 14 },
+  button: { ...ui.buttonPrimary, backgroundColor: colors.danger, marginTop: 4 },
+  buttonDisabled: { backgroundColor: '#D9A6A6' },
+  buttonText: { ...ui.buttonPrimaryText },
 });

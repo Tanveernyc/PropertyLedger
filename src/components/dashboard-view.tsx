@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { DashboardModel } from '@/lib/dashboard';
 import { formatMoney } from '@/lib/money';
 import type { TimelineEntry } from '@/lib/timeline';
+import { colors, money, radius, type, ui } from '@/theme';
 
 interface Props {
   model: DashboardModel;
@@ -28,17 +29,18 @@ export function DashboardView({
     <ScrollView contentContainerStyle={styles.container} testID="dashboard">
       {/* Portfolio net this year */}
       <View style={styles.netCard}>
-        <Text style={styles.netLabel}>Portfolio net · this year</Text>
+        <Text style={styles.netLabel}>Net this year, all properties</Text>
         <Text style={[styles.netValue, yearPL.net < 0 && styles.netNegative]}>
           {formatMoney(yearPL.net)}
         </Text>
-        <Text style={styles.netBreakdown}>
-          {formatMoney(yearPL.totalIncome)} in · {formatMoney(yearPL.totalExpense)} out
-        </Text>
+        <View style={styles.netRow}>
+          <Text style={styles.netBreakdown}>In {formatMoney(yearPL.totalIncome)}</Text>
+          <Text style={styles.netBreakdown}>Out {formatMoney(yearPL.totalExpense)}</Text>
+        </View>
       </View>
 
       <Pressable style={styles.quickAdd} onPress={onQuickAdd} accessibilityLabel="Quick add">
-        <Text style={styles.quickAddText}>＋ Add expense or income</Text>
+        <Text style={styles.quickAddText}>Add expense or income</Text>
       </Pressable>
 
       <Text style={styles.sectionTitle}>Properties</Text>
@@ -53,9 +55,9 @@ export function DashboardView({
           >
             <Text style={styles.propertyName}>{card.name}</Text>
             <View style={styles.propertyNumbers}>
-              <Text style={styles.propertyIn}>{formatMoney(card.totalIncome)}</Text>
+              <Text style={styles.propertyIn}>+{formatMoney(card.totalIncome)}</Text>
               <Text style={styles.propertyOut}>−{formatMoney(card.totalExpense)}</Text>
-              <Text style={[styles.propertyNet, card.net < 0 && styles.netNegative]}>
+              <Text style={[styles.propertyNet, card.net < 0 && styles.propertyNetNegative]}>
                 {formatMoney(card.net)}
               </Text>
             </View>
@@ -94,50 +96,36 @@ export function DashboardView({
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, paddingBottom: 48, gap: 8 },
-  netCard: {
-    backgroundColor: '#2563eb',
-    borderRadius: 12,
-    padding: 18,
-    gap: 4,
-  },
-  netLabel: { color: '#dbeafe', fontSize: 13 },
-  netValue: { color: '#fff', fontSize: 32, fontWeight: '700' },
-  netNegative: { color: '#fecaca' },
-  netBreakdown: { color: '#dbeafe', fontSize: 13 },
-  quickAdd: {
-    borderWidth: 1,
-    borderColor: '#2563eb',
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  quickAddText: { color: '#2563eb', fontWeight: '600' },
-  sectionTitle: { fontSize: 13, fontWeight: '700', color: '#666', marginTop: 10 },
-  empty: { color: '#888', fontSize: 14 },
-  propertyCard: {
-    borderWidth: 1,
-    borderColor: '#e5e5e5',
-    borderRadius: 10,
-    padding: 12,
-    gap: 6,
-    backgroundColor: '#fff',
-  },
-  propertyName: { fontSize: 15, fontWeight: '600' },
+  container: { padding: 16, paddingBottom: 48, gap: 10 },
+  // The one loud thing on the screen: the year's bottom line, in ink on ink.
+  netCard: { backgroundColor: colors.ink, borderRadius: radius.card, padding: 20, gap: 6 },
+  netLabel: { color: '#B8C0D0', fontSize: 13 },
+  netValue: { ...money, color: colors.card, fontSize: 36, fontWeight: '700', letterSpacing: -0.8 },
+  netNegative: { color: '#F2B8B5' },
+  netRow: { flexDirection: 'row', gap: 16, marginTop: 2 },
+  netBreakdown: { ...money, color: '#B8C0D0', fontSize: 13, fontWeight: '500' },
+  quickAdd: { ...ui.buttonSecondary },
+  quickAddText: { ...ui.buttonSecondaryText, color: colors.brass },
+  sectionTitle: { ...type.title, fontSize: 17, marginTop: 8 },
+  empty: { ...type.hint, fontSize: 14 },
+  propertyCard: { ...ui.card, padding: 14, gap: 8 },
+  propertyName: { ...type.body, fontWeight: '600' },
   propertyNumbers: { flexDirection: 'row', justifyContent: 'space-between' },
-  propertyIn: { color: '#16a34a', fontSize: 13 },
-  propertyOut: { color: '#666', fontSize: 13 },
-  propertyNet: { fontWeight: '700', fontSize: 13, color: '#111' },
+  propertyIn: { ...money, color: colors.gain, fontSize: 13, fontWeight: '500' },
+  propertyOut: { ...money, color: colors.slate, fontSize: 13, fontWeight: '500' },
+  propertyNet: { ...money, fontSize: 13, fontWeight: '700' },
+  propertyNetNegative: { color: colors.danger },
   recentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#eee',
+    ...ui.row,
+    paddingHorizontal: 14,
+    borderBottomWidth: 0,
+    borderRadius: radius.card,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.line,
   },
   recentText: { flex: 1 },
-  recentCategory: { fontSize: 14, fontWeight: '600' },
-  recentMeta: { fontSize: 12, color: '#777', marginTop: 2 },
-  amountIn: { color: '#16a34a', fontWeight: '600' },
-  amountOut: { color: '#111', fontWeight: '600' },
+  recentCategory: { ...type.body, fontWeight: '600' },
+  recentMeta: { ...type.hint, fontSize: 12, marginTop: 2 },
+  amountIn: { ...money, color: colors.gain },
+  amountOut: { ...money },
 });

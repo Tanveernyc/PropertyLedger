@@ -19,6 +19,7 @@ import { skipRecurringMonth } from '@/db/recurring';
 import { monthKey } from '@/lib/dates';
 import { validateTransactionForm, type TransactionValidation } from '@/lib/expense-validation';
 import type { Expense, Income } from '@/types';
+import { money, type, ui } from '@/theme';
 
 export default function EditTransactionScreen() {
   const { kind, id } = useLocalSearchParams<{ kind: 'expense' | 'income'; id: string }>();
@@ -190,26 +191,13 @@ export default function EditTransactionScreen() {
 const styles = StyleSheet.create({
   container: { padding: 16, paddingBottom: 48, gap: 4 },
   spinner: { marginTop: 40 },
-  label: { fontSize: 13, fontWeight: '600', color: '#555', marginTop: 12 },
-  recurringNote: { color: '#555', fontSize: 12, marginBottom: 8, lineHeight: 16 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-  },
-  amountInput: { fontSize: 24, fontWeight: '600' },
+  label: { ...ui.label },
+  recurringNote: { ...type.label, fontSize: 12, marginBottom: 8, lineHeight: 16 },
+  input: { ...ui.input, fontSize: 16 },
+  amountInput: { ...money, fontSize: 26, fontWeight: '700' },
   periodRow: { flexDirection: 'row', gap: 8 },
   periodInput: { flex: 1 },
-  error: { color: '#c0392b', fontSize: 13, marginTop: 2 },
-  saveButton: {
-    backgroundColor: '#2563eb',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  saveButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  error: { ...ui.error, fontSize: 13 },
+  saveButton: { ...ui.buttonPrimary, marginTop: 20 },
+  saveButtonText: { ...ui.buttonPrimaryText },
 });

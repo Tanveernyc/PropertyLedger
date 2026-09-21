@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
 import type { NewProperty, Property, PropertyType } from '@/types';
+import { ui } from '@/theme';
 import {
   parsePriceInput,
   PROPERTY_TYPES,
@@ -128,34 +129,15 @@ export function PropertyForm({ initial, onSubmit, submitting, submitLabel }: Pro
 
 const styles = StyleSheet.create({
   container: { padding: 16, gap: 6, paddingBottom: 48 },
-  label: { fontSize: 13, fontWeight: '600', color: '#555', marginTop: 10 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-  },
+  label: { ...ui.label },
+  input: { ...ui.input, fontSize: 16 },
   notes: { minHeight: 80, textAlignVertical: 'top' },
   typeRow: { gap: 8 },
-  typeChip: {
-    borderWidth: 1,
-    borderColor: '#2563eb',
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-  },
-  typeChipActive: { backgroundColor: '#2563eb' },
-  typeChipText: { color: '#2563eb' },
-  typeChipTextActive: { color: '#fff' },
-  error: { color: '#c0392b', fontSize: 13 },
-  button: {
-    backgroundColor: '#2563eb',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  typeChip: { ...ui.chip, paddingHorizontal: 16 },
+  typeChipActive: { ...ui.chipActive },
+  typeChipText: { ...ui.chipText, fontSize: 14 },
+  typeChipTextActive: { ...ui.chipTextActive, fontSize: 14 },
+  error: { ...ui.error, fontSize: 13 },
+  button: { ...ui.buttonPrimary, marginTop: 20 },
+  buttonText: { ...ui.buttonPrimaryText },
 });

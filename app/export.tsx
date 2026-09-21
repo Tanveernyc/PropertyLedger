@@ -11,6 +11,7 @@ import { listAllExpenses } from '@/db/expenses';
 import { listAllIncome } from '@/db/income';
 import { listProperties } from '@/db/properties';
 import { buildTransactionsCsv } from '@/lib/export';
+import { type, ui } from '@/theme';
 
 export default function ExportScreen() {
   const [busy, setBusy] = useState(false);
@@ -64,15 +65,10 @@ export default function ExportScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, gap: 16, backgroundColor: '#fff' },
-  heading: { fontSize: 20, fontWeight: '700' },
-  body: { fontSize: 14, color: '#555', lineHeight: 20 },
-  button: {
-    backgroundColor: '#2563eb',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  loading: { color: '#888', textAlign: 'center' },
+  container: { ...ui.screen, padding: 24, gap: 16 },
+  heading: { ...type.title },
+  body: { ...type.label, fontSize: 14, lineHeight: 20 },
+  button: { ...ui.buttonPrimary },
+  buttonText: { ...ui.buttonPrimaryText },
+  loading: { ...type.hint, textAlign: 'center' },
 });

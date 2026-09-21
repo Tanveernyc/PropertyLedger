@@ -28,6 +28,7 @@ import {
 } from '@/lib/add-transaction-state';
 import { validateTransactionForm, type TransactionValidation } from '@/lib/expense-validation';
 import type { CategoryKind } from '@/types';
+import { colors, money, ui } from '@/theme';
 
 // Last-used property is shared across kinds; recent categories are per kind.
 const LAST_PROPERTY_KEY = 'add:last-property-id';
@@ -238,37 +239,18 @@ function Chip({ label, active, onPress }: { label: string; active: boolean; onPr
 
 const styles = StyleSheet.create({
   container: { padding: 16, paddingBottom: 48, gap: 4 },
-  label: { fontSize: 13, fontWeight: '600', color: '#555', marginTop: 12 },
+  label: { ...ui.label },
   chipRow: { gap: 8, paddingVertical: 6 },
-  chip: {
-    borderWidth: 1,
-    borderColor: '#2563eb',
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-  },
-  chipActive: { backgroundColor: '#2563eb' },
-  chipText: { color: '#2563eb' },
-  chipTextActive: { color: '#fff' },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-  },
-  amountInput: { fontSize: 24, fontWeight: '600' },
+  chip: { ...ui.chip },
+  chipActive: { ...ui.chipActive },
+  chipText: { ...ui.chipText },
+  chipTextActive: { ...ui.chipTextActive },
+  input: { ...ui.input, fontSize: 16 },
+  amountInput: { ...money, fontSize: 26, fontWeight: '700' },
   periodRow: { flexDirection: 'row', gap: 8 },
   periodInput: { flex: 1 },
-  error: { color: '#c0392b', fontSize: 13, marginTop: 2 },
-  saveButton: {
-    backgroundColor: '#2563eb',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  saveButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  savedFlash: { color: '#16a34a', textAlign: 'center', marginTop: 8, fontWeight: '600' },
+  error: { ...ui.error, fontSize: 13 },
+  saveButton: { ...ui.buttonPrimary, marginTop: 20 },
+  saveButtonText: { ...ui.buttonPrimaryText },
+  savedFlash: { color: colors.gain, textAlign: 'center', marginTop: 8, fontWeight: '600' },
 });

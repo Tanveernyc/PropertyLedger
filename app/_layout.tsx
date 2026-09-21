@@ -5,6 +5,7 @@ import { Stack } from 'expo-router/stack';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SessionProvider, useSession } from '@/components/session-provider';
 import { isSignedIn } from '@/lib/auth-guard';
+import { colors } from '@/theme';
 
 // One client for the whole app; query caching keeps list screens instant.
 const queryClient = new QueryClient();
@@ -21,7 +22,16 @@ function RootNavigator() {
   return (
     // Minimal back buttons: the default would echo the previous screen's title,
     // and for pushes out of the tab group that title is the route-group name "(tabs)".
-    <Stack screenOptions={{ headerBackButtonDisplayMode: 'minimal' }}>
+    <Stack
+      screenOptions={{
+        headerBackButtonDisplayMode: 'minimal',
+        headerTintColor: colors.brass,
+        headerStyle: { backgroundColor: colors.card },
+        headerTitleStyle: { color: colors.ink, fontWeight: '700' },
+        headerShadowVisible: false,
+        contentStyle: { backgroundColor: colors.paper },
+      }}
+    >
       {/* Protected guards redirect to the first available screen when they fail,
           so a null session always lands on (auth)/sign-in. */}
       <Stack.Protected guard={signedIn}>

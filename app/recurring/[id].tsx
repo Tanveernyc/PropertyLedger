@@ -8,6 +8,7 @@ import { getRecurringRule, updateRecurringRule } from '@/db/recurring';
 import { monthKey } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
 import { validateRuleAmount } from '@/lib/recurring-rule-validation';
+import { money, type, ui } from '@/theme';
 
 export default function EditRecurringRuleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -86,11 +87,11 @@ export default function EditRecurringRuleScreen() {
 const styles = StyleSheet.create({
   container: { padding: 16, paddingBottom: 48 },
   spinner: { marginTop: 32 },
-  help: { color: '#555', fontSize: 13, marginBottom: 8, lineHeight: 18 },
-  label: { fontSize: 13, color: '#555', marginTop: 12, marginBottom: 4 },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, fontSize: 15 },
-  amountInput: { fontSize: 22, fontWeight: '600' },
-  saveButton: { marginTop: 20, backgroundColor: '#2563eb', borderRadius: 8, paddingVertical: 12, alignItems: 'center' },
-  saveButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  error: { color: '#c0392b', fontSize: 12, marginTop: 4 },
+  help: { ...type.label, marginBottom: 8, lineHeight: 18 },
+  label: { ...ui.label },
+  input: { ...ui.input },
+  amountInput: { ...money, fontSize: 24, fontWeight: '700' },
+  saveButton: { ...ui.buttonPrimary, marginTop: 20 },
+  saveButtonText: { ...ui.buttonPrimaryText },
+  error: { ...ui.error },
 });

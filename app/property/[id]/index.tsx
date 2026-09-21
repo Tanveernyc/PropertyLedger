@@ -23,6 +23,7 @@ import { skipRecurringMonth } from '@/db/recurring';
 import { confirmDelete } from '@/lib/confirm-delete';
 import { formatMoney } from '@/lib/money';
 import { buildTimeline, filterTimeline, type TimelineEntry } from '@/lib/timeline';
+import { colors, money, type, ui } from '@/theme';
 
 export default function PropertyTransactionsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -189,56 +190,30 @@ export default function PropertyTransactionsScreen() {
 }
 
 const styles = StyleSheet.create({
+  container: { ...ui.screen },
   // Home-indicator clearance so the last row is never cut off.
   listContent: { paddingBottom: 40 },
-  container: { flex: 1, backgroundColor: '#fff' },
-  header: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16, paddingHorizontal: 16, paddingTop: 8 },
-  editLink: { color: '#2563eb', fontSize: 14 },
+  header: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16, paddingHorizontal: 16, paddingTop: 10 },
+  editLink: { ...ui.link },
   // ScrollView defaults to flexShrink: 1, which lets the column squash the strip
   // under the date row; pin it to its content height.
   chipStrip: { flexGrow: 0, flexShrink: 0 },
   chipRow: { gap: 6, paddingHorizontal: 12, paddingVertical: 8 },
-  chip: {
-    borderWidth: 1,
-    borderColor: '#2563eb',
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  chipActive: { backgroundColor: '#2563eb' },
-  chipText: { color: '#2563eb', fontSize: 13 },
-  chipTextActive: { color: '#fff', fontSize: 13 },
-  dateRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 12, paddingBottom: 8 },
-  dateInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    fontSize: 14,
-  },
+  chip: { ...ui.chip },
+  chipActive: { ...ui.chipActive },
+  chipText: { ...ui.chipText },
+  chipTextActive: { ...ui.chipTextActive },
+  dateRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 12, paddingBottom: 10 },
+  dateInput: { ...ui.input, flex: 1, fontSize: 14 },
   spinner: { marginTop: 32 },
-  empty: { textAlign: 'center', color: '#888', marginTop: 40 },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#eee',
-  },
+  empty: { ...ui.empty },
+  // The ledger: hairline-ruled rows, amounts in a right-hand column of tabular figures.
+  row: { ...ui.row },
   rowText: { flex: 1 },
-  rowCategory: { fontSize: 15, fontWeight: '600' },
-  rowMeta: { fontSize: 13, color: '#777', marginTop: 2 },
-  amountIn: { color: '#16a34a', fontWeight: '600', fontSize: 15 },
-  amountOut: { color: '#111', fontWeight: '600', fontSize: 15 },
-  deleteAction: {
-    backgroundColor: '#dc2626',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 84,
-  },
-  deleteActionText: { color: '#fff', fontWeight: '700' },
+  rowCategory: { ...type.body, fontWeight: '600' },
+  rowMeta: { ...type.hint, marginTop: 2 },
+  amountIn: { ...money, color: colors.gain },
+  amountOut: { ...money },
+  deleteAction: { backgroundColor: colors.danger, justifyContent: 'center', alignItems: 'center', width: 84 },
+  deleteActionText: { color: colors.card, fontWeight: '700' },
 });

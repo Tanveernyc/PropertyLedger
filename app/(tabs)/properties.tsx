@@ -4,6 +4,7 @@ import { Link } from 'expo-router';
 import { FlatList, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { listProperties } from '@/db/properties';
 import type { Property } from '@/types';
+import { colors, radius, type, ui } from '@/theme';
 import { useState } from 'react';
 
 export default function PropertiesScreen() {
@@ -32,7 +33,7 @@ export default function PropertiesScreen() {
       {error ? <Text style={styles.error}>{(error as Error).message}</Text> : null}
 
       <FlatList
-          contentContainerStyle={styles.listContent}
+        contentContainerStyle={styles.listContent}
         data={data ?? []}
         keyExtractor={(item) => item.id}
         refreshing={isPending}
@@ -68,33 +69,25 @@ function PropertyRow({ property }: { property: Property }) {
 }
 
 const styles = StyleSheet.create({
-  // Home-indicator clearance so the last row is never cut off.
-  listContent: { paddingBottom: 40 },
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { ...ui.screen },
+  // Cards sit on the paper background; bottom clearance for the home indicator.
+  listContent: { padding: 16, paddingBottom: 40, gap: 10 },
   toolbar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#ddd',
+    paddingHorizontal: 16,
+    paddingTop: 12,
   },
   toggleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  toggleLabel: { fontSize: 14, color: '#444' },
-  addButton: { backgroundColor: '#2563eb', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
-  addButtonText: { color: '#fff', fontWeight: '600' },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#eee',
-  },
+  toggleLabel: { ...type.label, fontSize: 14 },
+  addButton: { backgroundColor: colors.ink, borderRadius: radius.control, paddingHorizontal: 14, paddingVertical: 8 },
+  addButtonText: { color: colors.card, fontWeight: '600' },
+  row: { ...ui.card, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
   rowText: { flex: 1 },
-  rowName: { fontSize: 16, fontWeight: '600' },
-  rowMeta: { fontSize: 13, color: '#777', marginTop: 2 },
-  archivedBadge: { fontSize: 12, color: '#999', fontStyle: 'italic' },
-  empty: { textAlign: 'center', color: '#888', marginTop: 40, paddingHorizontal: 24 },
-  error: { color: '#c0392b', padding: 12 },
+  rowName: { ...type.body, fontSize: 16, fontWeight: '600' },
+  rowMeta: { ...type.hint, marginTop: 2 },
+  archivedBadge: { fontSize: 12, color: colors.mist, fontStyle: 'italic' },
+  empty: { ...ui.empty, paddingHorizontal: 24 },
+  error: { ...ui.error, padding: 12 },
 });

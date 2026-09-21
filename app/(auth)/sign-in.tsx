@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { supabase } from '@/db/supabase';
 import { validateSignIn, type SignInValidation } from '@/lib/auth-validation';
+import { colors, type, ui } from '@/theme';
 
 type Mode = 'sign-in' | 'sign-up';
 
@@ -108,26 +109,13 @@ export default function SignInScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', backgroundColor: '#fff' },
+  container: { flex: 1, justifyContent: 'center', backgroundColor: colors.paper },
   form: { paddingHorizontal: 24, gap: 12 },
-  title: { fontSize: 28, fontWeight: '700', textAlign: 'center' },
-  subtitle: { fontSize: 15, color: '#666', textAlign: 'center', marginBottom: 12 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    fontSize: 16,
-  },
-  error: { color: '#c0392b', fontSize: 13 },
-  button: {
-    backgroundColor: '#2563eb',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  switchText: { color: '#2563eb', textAlign: 'center', marginTop: 8 },
+  title: { ...type.display, textAlign: 'center' },
+  subtitle: { ...type.label, fontSize: 15, textAlign: 'center', marginBottom: 12 },
+  input: { ...ui.input, fontSize: 16, paddingVertical: 12 },
+  error: { ...ui.error, fontSize: 13 },
+  button: { ...ui.buttonPrimary, marginTop: 4 },
+  buttonText: { ...ui.buttonPrimaryText },
+  switchText: { ...ui.link, textAlign: 'center', marginTop: 8 },
 });

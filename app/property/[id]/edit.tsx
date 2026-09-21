@@ -5,6 +5,7 @@ import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'rea
 import { PropertyForm } from '@/components/property-form';
 import { getProperty, setPropertyArchived, updateProperty } from '@/db/properties';
 import type { NewProperty } from '@/types';
+import { colors, ui } from '@/theme';
 
 export default function EditPropertyScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -79,9 +80,9 @@ export default function EditPropertyScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { ...ui.screen },
   spinner: { marginTop: 40 },
-  error: { color: '#c0392b', padding: 16 },
+  error: { ...ui.error, padding: 16 },
   archiveButton: { alignItems: 'center', padding: 16 },
-  archiveText: { color: '#c0392b', fontWeight: '600' },
+  archiveText: { color: colors.danger, fontWeight: '600' },
 });

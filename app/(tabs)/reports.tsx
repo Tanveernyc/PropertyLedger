@@ -18,6 +18,7 @@ import {
 } from '@/lib/aggregate';
 import { todayISO } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
+import { colors, money, type, ui } from '@/theme';
 
 type Preset = 'this-year' | 'last-year' | 'all-time' | 'custom';
 
@@ -153,42 +154,21 @@ function PLRow({
 const styles = StyleSheet.create({
   container: { padding: 16, paddingBottom: 48, gap: 10 },
   presets: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
-  presetChip: {
-    borderWidth: 1,
-    borderColor: '#2563eb',
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  presetChipActive: { backgroundColor: '#2563eb' },
-  presetText: { color: '#2563eb', fontSize: 13 },
-  presetTextActive: { color: '#fff', fontSize: 13 },
+  presetChip: { ...ui.chip },
+  presetChipActive: { ...ui.chipActive },
+  presetText: { ...ui.chipText },
+  presetTextActive: { ...ui.chipTextActive },
   customRow: { flexDirection: 'row', gap: 8 },
-  dateInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    fontSize: 14,
-  },
-  card: {
-    borderWidth: 1,
-    borderColor: '#e5e5e5',
-    borderRadius: 10,
-    padding: 14,
-    gap: 6,
-    backgroundColor: '#fff',
-  },
-  cardTitle: { fontSize: 15, fontWeight: '700', marginBottom: 4 },
-  sectionTitle: { fontSize: 13, fontWeight: '700', color: '#666', marginTop: 8 },
+  dateInput: { ...ui.input, flex: 1, fontSize: 14 },
+  card: { ...ui.card, padding: 14, gap: 6 },
+  cardTitle: { ...type.body, fontWeight: '700', marginBottom: 4 },
+  sectionTitle: { ...type.title, fontSize: 17, marginTop: 8 },
   plRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  plLabel: { fontSize: 14, color: '#444' },
-  plValue: { fontSize: 14, color: '#111' },
-  plPositive: { fontSize: 14, color: '#16a34a' },
+  plLabel: { ...type.label, fontSize: 14 },
+  plValue: { ...money, fontSize: 14, fontWeight: '500' },
+  plPositive: { ...money, fontSize: 14, fontWeight: '500', color: colors.gain },
   bold: { fontWeight: '700' },
-  divider: { height: StyleSheet.hairlineWidth, backgroundColor: '#ddd', marginVertical: 4 },
-  emptyText: { color: '#888' },
-  historyLink: { color: '#2563eb', fontSize: 14, marginTop: 8 },
+  divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.line, marginVertical: 4 },
+  emptyText: { ...type.hint },
+  historyLink: { ...ui.link, marginTop: 8 },
 });

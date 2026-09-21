@@ -11,6 +11,7 @@ import { confirmDelete } from '@/lib/confirm-delete';
 import { monthKey } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
 import type { RecurringRule } from '@/types';
+import { colors, money, type, ui } from '@/theme';
 
 export default function PropertyRecurringScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -110,27 +111,19 @@ export default function PropertyRecurringScreen() {
 }
 
 const styles = StyleSheet.create({
-  // Home-indicator clearance so the last row is never cut off.
+  container: { ...ui.screen },
   listContent: { paddingBottom: 40 },
-  container: { flex: 1, backgroundColor: '#fff' },
   header: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16, paddingHorizontal: 16, paddingVertical: 10 },
-  link: { color: '#2563eb', fontSize: 14 },
+  link: { ...ui.link },
   spinner: { marginTop: 32 },
-  empty: { textAlign: 'center', color: '#888', marginTop: 40 },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#eee',
-  },
+  empty: { ...ui.empty },
+  row: { ...ui.row },
   rowInactive: { opacity: 0.55 },
   rowText: { flex: 1 },
-  rowTitle: { fontSize: 15, fontWeight: '600' },
-  rowMeta: { fontSize: 13, color: '#777', marginTop: 2 },
+  rowTitle: { ...money, fontSize: 15 },
+  rowMeta: { ...type.hint, marginTop: 2 },
   actions: { flexDirection: 'row', gap: 14 },
-  edit: { color: '#2563eb', fontSize: 14 },
-  stop: { color: '#b45309', fontSize: 14 },
-  delete: { color: '#dc2626', fontSize: 14 },
+  edit: { ...ui.link },
+  stop: { color: colors.brass, fontSize: 14, fontWeight: '600' },
+  delete: { color: colors.danger, fontSize: 14, fontWeight: '600' },
 });

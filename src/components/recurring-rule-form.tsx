@@ -15,6 +15,7 @@ import {
   type RecurringRuleValidation,
 } from '@/lib/recurring-rule-validation';
 import type { CategoryKind, EndMode } from '@/types';
+import { colors, money, type, ui } from '@/theme';
 
 interface Props {
   kind: CategoryKind;
@@ -225,22 +226,23 @@ function Chip({ label, active, onPress }: { label: string; active: boolean; onPr
 
 const styles = StyleSheet.create({
   container: { padding: 16, paddingBottom: 48 },
-  help: { color: '#555', fontSize: 13, marginBottom: 8, lineHeight: 18 },
-  label: { fontSize: 13, color: '#555', marginTop: 12, marginBottom: 4 },
+  help: { ...type.label, marginBottom: 8, lineHeight: 18 },
+  label: { ...ui.label },
   chipStrip: { flexGrow: 0, flexShrink: 0 },
   chipRow: { gap: 6, paddingVertical: 4 },
-  chip: { borderWidth: 1, borderColor: '#2563eb', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 4 },
-  chipActive: { backgroundColor: '#2563eb' },
-  chipText: { color: '#2563eb', fontSize: 13 },
-  chipTextActive: { color: '#fff', fontSize: 13 },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, fontSize: 15 },
-  amountInput: { fontSize: 22, fontWeight: '600' },
-  segment: { flexDirection: 'row', borderRadius: 8, backgroundColor: '#eee', padding: 3 },
-  segmentButton: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 6 },
-  segmentButtonActive: { backgroundColor: '#fff' },
-  segmentText: { color: '#666', fontSize: 14 },
-  segmentTextActive: { color: '#111', fontSize: 14, fontWeight: '600' },
-  saveButton: { marginTop: 20, backgroundColor: '#2563eb', borderRadius: 8, paddingVertical: 12, alignItems: 'center' },
-  saveButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  error: { color: '#c0392b', fontSize: 12, marginTop: 4 },
+  chip: { ...ui.chip },
+  chipActive: { ...ui.chipActive },
+  chipText: { ...ui.chipText },
+  chipTextActive: { ...ui.chipTextActive },
+  input: { ...ui.input },
+  amountInput: { ...money, fontSize: 24, fontWeight: '700' },
+  hint: { ...type.hint, marginTop: 4 },
+  segment: { flexDirection: 'row', borderRadius: 10, backgroundColor: colors.line, padding: 3 },
+  segmentButton: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8 },
+  segmentButtonActive: { backgroundColor: colors.card },
+  segmentText: { color: colors.slate, fontSize: 14 },
+  segmentTextActive: { color: colors.ink, fontSize: 14, fontWeight: '600' },
+  saveButton: { ...ui.buttonPrimary, marginTop: 20 },
+  saveButtonText: { ...ui.buttonPrimaryText },
+  error: { ...ui.error },
 });

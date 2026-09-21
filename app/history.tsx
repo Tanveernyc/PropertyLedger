@@ -9,6 +9,7 @@ import { listPropertyExpenses } from '@/db/expenses';
 import { listProperties } from '@/db/properties';
 import { calcCategoryTrend } from '@/lib/aggregate';
 import { formatMoney } from '@/lib/money';
+import { colors, money, ui } from '@/theme';
 
 export default function HistoryScreen() {
   const [propertyId, setPropertyId] = useState<string | null>(null);
@@ -90,7 +91,7 @@ export default function HistoryScreen() {
           {chartData.length >= 2 ? (
             <View style={styles.chartBox}>
               <CartesianChart data={chartData} xKey="x" yKeys={['y']}>
-                {({ points }) => <Line points={points.y} color="#2563eb" strokeWidth={3} />}
+                {({ points }) => <Line points={points.y} color={colors.brass} strokeWidth={3} />}
               </CartesianChart>
             </View>
           ) : null}
@@ -132,33 +133,27 @@ function changeStyle(change: number | null) {
 
 const styles = StyleSheet.create({
   container: { padding: 16, paddingBottom: 48, gap: 6 },
-  label: { fontSize: 13, fontWeight: '600', color: '#555', marginTop: 8 },
+  label: { ...ui.label, marginTop: 8 },
   chipRow: { gap: 6, paddingVertical: 6 },
   groupByRow: { flexDirection: 'row', gap: 6, marginTop: 8 },
-  chip: {
-    borderWidth: 1,
-    borderColor: '#2563eb',
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-  },
-  chipActive: { backgroundColor: '#2563eb' },
-  chipText: { color: '#2563eb', fontSize: 13 },
-  chipTextActive: { color: '#fff', fontSize: 13 },
-  empty: { color: '#888', textAlign: 'center', marginTop: 32 },
+  chip: { ...ui.chip },
+  chipActive: { ...ui.chipActive },
+  chipText: { ...ui.chipText },
+  chipTextActive: { ...ui.chipTextActive },
+  empty: { ...ui.empty, marginTop: 32 },
   chartBox: { height: 220, marginTop: 12 },
-  table: { marginTop: 12, borderWidth: 1, borderColor: '#e5e5e5', borderRadius: 10 },
-  tableHead: { backgroundColor: '#f6f6f6' },
+  table: { ...ui.card, marginTop: 12, overflow: 'hidden' },
+  tableHead: { backgroundColor: colors.paper },
   tableRow: {
     flexDirection: 'row',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#eee',
+    borderBottomColor: colors.line,
   },
-  headText: { fontWeight: '700', color: '#555' },
-  cell: { flex: 1.2, fontSize: 13 },
-  cellRight: { flex: 1, fontSize: 13, textAlign: 'right' },
-  up: { color: '#dc2626' },
-  down: { color: '#16a34a' },
+  headText: { fontWeight: '700', color: colors.slate },
+  cell: { flex: 1.2, fontSize: 13, color: colors.ink },
+  cellRight: { ...money, flex: 1, fontSize: 13, fontWeight: '500', textAlign: 'right' },
+  up: { color: colors.danger },
+  down: { color: colors.gain },
 });

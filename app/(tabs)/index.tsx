@@ -13,6 +13,7 @@ import { listProperties } from '@/db/properties';
 import { supabase } from '@/db/supabase';
 import { buildDashboardModel } from '@/lib/dashboard';
 import { todayISO } from '@/lib/dates';
+import { colors, ui } from '@/theme';
 
 export default function DashboardScreen() {
   const { session } = useSession();
@@ -64,18 +65,18 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { ...ui.screen },
+  // Two lines: who is signed in, then the account actions - never fights for width.
   footer: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#ddd',
+    borderTopColor: colors.line,
+    backgroundColor: colors.card,
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    paddingVertical: 10,
+    gap: 6,
   },
-  footerText: { fontSize: 12, color: '#999' },
-  footerLinks: { flexDirection: 'row', gap: 14, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' },
-  link: { color: '#2563eb', fontSize: 13 },
-  signOut: { color: '#c0392b', fontSize: 13 },
+  footerText: { fontSize: 12, color: colors.mist },
+  footerLinks: { flexDirection: 'row', gap: 18, alignItems: 'center', flexWrap: 'wrap' },
+  link: { color: colors.brass, fontSize: 13, fontWeight: '600' },
+  signOut: { color: colors.danger, fontSize: 13, fontWeight: '600' },
 });

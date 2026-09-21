@@ -144,6 +144,7 @@ export default function PropertyTransactionsScreen() {
         <ActivityIndicator style={styles.spinner} />
       ) : (
         <FlatList
+          contentContainerStyle={styles.listContent}
           data={timeline}
           keyExtractor={(entry) => `${entry.kind}-${entry.id}`}
           ListEmptyComponent={<Text style={styles.empty}>No transactions match.</Text>}
@@ -188,6 +189,8 @@ export default function PropertyTransactionsScreen() {
 }
 
 const styles = StyleSheet.create({
+  // Home-indicator clearance so the last row is never cut off.
+  listContent: { paddingBottom: 40 },
   container: { flex: 1, backgroundColor: '#fff' },
   header: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16, paddingHorizontal: 16, paddingTop: 8 },
   editLink: { color: '#2563eb', fontSize: 14 },

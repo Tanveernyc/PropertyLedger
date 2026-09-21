@@ -32,6 +32,7 @@ export default function PropertiesScreen() {
       {error ? <Text style={styles.error}>{(error as Error).message}</Text> : null}
 
       <FlatList
+          contentContainerStyle={styles.listContent}
         data={data ?? []}
         keyExtractor={(item) => item.id}
         refreshing={isPending}
@@ -67,6 +68,8 @@ function PropertyRow({ property }: { property: Property }) {
 }
 
 const styles = StyleSheet.create({
+  // Home-indicator clearance so the last row is never cut off.
+  listContent: { paddingBottom: 40 },
   container: { flex: 1, backgroundColor: '#fff' },
   toolbar: {
     flexDirection: 'row',

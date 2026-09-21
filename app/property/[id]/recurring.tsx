@@ -70,6 +70,7 @@ export default function PropertyRecurringScreen() {
         <ActivityIndicator style={styles.spinner} />
       ) : (
         <FlatList
+          contentContainerStyle={styles.listContent}
           data={rules}
           keyExtractor={(r) => r.id}
           ListEmptyComponent={<Text style={styles.empty}>No recurring rules for this property yet.</Text>}
@@ -109,6 +110,8 @@ export default function PropertyRecurringScreen() {
 }
 
 const styles = StyleSheet.create({
+  // Home-indicator clearance so the last row is never cut off.
+  listContent: { paddingBottom: 40 },
   container: { flex: 1, backgroundColor: '#fff' },
   header: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16, paddingHorizontal: 16, paddingVertical: 10 },
   link: { color: '#2563eb', fontSize: 14 },

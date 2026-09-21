@@ -1,0 +1,5 @@
+# GitHub Pages serves only the public pages (privacy.html, support.html).
+# Internal specs/plans contain JSX/Liquid-like braces that break Jekyll.
+exclude:
+  - superpowers/
+  - app-store-listing.md

@@ -2,7 +2,7 @@
 // This Year / Last Year / All Time / Custom, plus expense-by-category totals.
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { listCategories } from '@/db/categories';
 import { listAllExpenses } from '@/db/expenses';
@@ -12,20 +12,25 @@ import {
   calcByCategory,
   calcPL,
   calcPLByProperty,
+  lastMonthRange,
   lastYearRange,
+  savingsRate,
+  thisMonthRange,
   thisYearRange,
   type DateRange,
 } from '@/lib/aggregate';
 import { todayISO } from '@/lib/dates';
+import { collectionNoun, kindsOf } from '@/lib/ledger-copy';
 import { formatMoney } from '@/lib/money';
 import { colors, money, type, ui } from '@/theme';
 
-type Preset = 'this-year' | 'last-year' | 'all-time' | 'custom';
+type Preset = 'this-month' | 'last-month' | 'this-year' | 'last-year' | 'all-time' | 'custom';
 
 export default function ReportsScreen() {
   const [preset, setPreset] = useState<Preset>('this-year');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
+  const defaultedRef = useRef(false);
 
   const { data: properties } = useQuery({
     queryKey: ['properties', { includeArchived: true }],
@@ -35,8 +40,23 @@ export default function ReportsScreen() {
   const { data: income } = useQuery({ queryKey: ['income', 'all'], queryFn: listAllIncome });
   const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: listCategories });
 
+  // Kind-aware default (spec §8.2): personal-only users land on This Month;
+  // rental-only (and mixed) users keep This Year. Runs once, after properties load.
+  useEffect(() => {
+    if (defaultedRef.current || !properties) return;
+    defaultedRef.current = true;
+    const kinds = kindsOf(properties);
+    if (kinds.length === 1 && kinds[0] === 'personal') {
+      setPreset('this-month');
+    }
+  }, [properties]);
+
   const range: DateRange = useMemo(() => {
     switch (preset) {
+      case 'this-month':
+        return thisMonthRange(todayISO());
+      case 'last-month':
+        return lastMonthRange(todayISO());
       case 'this-year':
         return thisYearRange(todayISO());
       case 'last-year':
@@ -52,12 +72,16 @@ export default function ReportsScreen() {
   const portfolio = calcPL(expenses ?? [], income ?? [], range);
   const perProperty = calcPLByProperty(properties ?? [], expenses ?? [], income ?? [], range);
   const byCategory = calcByCategory(expenses ?? [], range, categories ?? []);
+  const rate = savingsRate(portfolio);
+  const portfolioIsPersonal = kindsOf(properties ?? []).includes('personal');
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.presets}>
         {(
           [
+            ['this-month', 'This Month'],
+            ['last-month', 'Last Month'],
             ['this-year', 'This Year'],
             ['last-year', 'Last Year'],
             ['all-time', 'All Time'],
@@ -101,18 +125,44 @@ export default function ReportsScreen() {
         <PLRow label="Expenses" value={portfolio.totalExpense} />
         <View style={styles.divider} />
         <PLRow label="Net" value={portfolio.net} positive={portfolio.net >= 0} bold />
+        {portfolioIsPersonal ? (
+          <>
+            <PLRow label="Saved" value={portfolio.net} positive={portfolio.net >= 0} bold={false} />
+            {rate !== null ? (
+              <Text style={styles.savingsRate}>
+                {rate >= 0 ? 'Savings rate' : 'Overspent by'} {Math.abs(Math.round(rate * 100))}% of
+                income
+              </Text>
+            ) : null}
+          </>
+        ) : null}
       </View>
 
-      <Text style={styles.sectionTitle}>By property</Text>
-      {perProperty.map((p) => (
-        <View key={p.propertyId} style={styles.card}>
-          <Text style={styles.cardTitle}>{p.name}</Text>
-          <PLRow label="Income" value={p.totalIncome} positive />
-          <PLRow label="Expenses" value={p.totalExpense} />
-          <View style={styles.divider} />
-          <PLRow label="Net" value={p.net} positive={p.net >= 0} bold />
-        </View>
-      ))}
+      <Text style={styles.sectionTitle}>By {collectionNoun(kindsOf(properties ?? [])).toLowerCase()}</Text>
+      {perProperty.map((p) => {
+        const isPersonal = properties?.find((pr) => pr.id === p.propertyId)?.property_type === 'personal';
+        const cardRate = savingsRate(p);
+        return (
+          <View key={p.propertyId} style={styles.card}>
+            <Text style={styles.cardTitle}>{p.name}</Text>
+            <PLRow label="Income" value={p.totalIncome} positive />
+            <PLRow label="Expenses" value={p.totalExpense} />
+            <View style={styles.divider} />
+            <PLRow label="Net" value={p.net} positive={p.net >= 0} bold />
+            {isPersonal ? (
+              <>
+                <PLRow label="Saved" value={p.net} positive={p.net >= 0} bold={false} />
+                {cardRate !== null ? (
+                  <Text style={styles.savingsRate}>
+                    {cardRate >= 0 ? 'Savings rate' : 'Overspent by'}{' '}
+                    {Math.abs(Math.round(cardRate * 100))}% of income
+                  </Text>
+                ) : null}
+              </>
+            ) : null}
+          </View>
+        );
+      })}
 
       <Link href="/history" style={styles.historyLink}>
         History &amp; trends - “did my insurance go up?” →
@@ -171,4 +221,5 @@ const styles = StyleSheet.create({
   divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.line, marginVertical: 4 },
   emptyText: { ...type.hint },
   historyLink: { ...ui.link, marginTop: 8 },
+  savingsRate: { ...type.hint, textAlign: 'right' },
 });

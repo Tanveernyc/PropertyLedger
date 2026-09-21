@@ -2,6 +2,7 @@
 // expense/income lists filter by kind correctly; system categories are undeletable.
 import {
   canDeleteCategory,
+  categoriesForLedger,
   filterCategoriesByKind,
   splitCategoriesByKind,
 } from '../src/lib/categories';
@@ -54,5 +55,23 @@ describe('canDeleteCategory', () => {
 
   it('allows deleting custom categories', () => {
     expect(canDeleteCategory(cat({ is_system: false, user_id: 'u1' }))).toBe(true);
+  });
+});
+
+describe('categoriesForLedger', () => {
+  const scoped: Category[] = [
+    cat({ id: 'r', name: 'Mortgage Interest', kind: 'expense', scope: 'rental' }),
+    cat({ id: 'b', name: 'Electric', kind: 'expense', scope: 'both' }),
+    cat({ id: 'p', name: 'Groceries', kind: 'expense', scope: 'personal' }),
+    cat({ id: 'pi', name: 'Salary', kind: 'income', scope: 'personal' }),
+  ];
+  it('a rental ledger sees rental + both, never personal', () => {
+    expect(categoriesForLedger(scoped, 'rental', 'expense').map((c) => c.id)).toEqual(['r', 'b']);
+  });
+  it('a personal ledger sees personal + both, never rental', () => {
+    expect(categoriesForLedger(scoped, 'personal', 'expense').map((c) => c.id)).toEqual(['b', 'p']);
+  });
+  it('still filters by entry kind', () => {
+    expect(categoriesForLedger(scoped, 'personal', 'income').map((c) => c.id)).toEqual(['pi']);
   });
 });

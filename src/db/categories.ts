@@ -3,7 +3,7 @@
 // client-side (canDeleteCategory) for a clear error instead of a silent no-op.
 import { supabase } from './supabase';
 import { canDeleteCategory } from '@/lib/categories';
-import type { Category, CategoryKind } from '@/types';
+import type { Category, CategoryKind, CategoryScope } from '@/types';
 
 /** All categories visible to the user (system + custom), stable name order. */
 export async function listCategories(): Promise<Category[]> {
@@ -13,12 +13,16 @@ export async function listCategories(): Promise<Category[]> {
 }
 
 /** Creates a custom category owned by the signed-in user. */
-export async function createCategory(name: string, kind: CategoryKind): Promise<Category> {
+export async function createCategory(
+  name: string,
+  kind: CategoryKind,
+  scope: CategoryScope = 'both'
+): Promise<Category> {
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData?.user) throw new Error('Not signed in.');
   const { data, error } = await supabase
     .from('categories')
-    .insert({ name: name.trim(), kind, user_id: userData.user.id, is_system: false })
+    .insert({ name: name.trim(), kind, user_id: userData.user.id, is_system: false, scope })
     .select()
     .single();
   if (error) throw error;

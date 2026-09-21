@@ -14,6 +14,8 @@ const expense = (overrides: Partial<Expense>): Expense => ({
   period_end: null,
   vendor: null,
   notes: null,
+  recurring_id: null,
+  is_edited: false,
   created_at: '2026-01-01T00:00:00Z',
   ...overrides,
 });
@@ -27,6 +29,8 @@ const income = (overrides: Partial<Income>): Income => ({
   received_on: '2026-01-01',
   source: null,
   notes: null,
+  recurring_id: null,
+  is_edited: false,
   created_at: '2026-01-01T00:00:00Z',
   ...overrides,
 });
@@ -106,5 +110,18 @@ describe('filterTimeline — category', () => {
       to: '2026-01-01',
     });
     expect(combined.map((t) => t.id)).toEqual(['e-rep']);
+  });
+});
+
+describe('recurring linkage on timeline entries', () => {
+  it('copies recurring_id from expenses and income rows', () => {
+    const e = expense({ id: 'e1', recurring_id: 'r1' });
+    const inc = income({ id: 'i1', recurring_id: 'r2' });
+    const [a, b] = buildTimeline([e], [inc]);
+    expect([a.recurring_id, b.recurring_id].sort()).toEqual(['r1', 'r2']);
+  });
+
+  it('is null for manual entries', () => {
+    expect(buildTimeline([expense({})], [])[0].recurring_id).toBeNull();
   });
 });

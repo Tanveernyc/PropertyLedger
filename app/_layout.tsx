@@ -29,11 +29,13 @@ function RootNavigator() {
         <Stack.Screen name="property/new" options={{ title: 'New Property', presentation: 'modal' }} />
         <Stack.Screen name="property/[id]/index" options={{ title: 'Property' }} />
         <Stack.Screen name="property/[id]/edit" options={{ title: 'Edit Property' }} />
+        <Stack.Screen name="property/[id]/recurring" options={{ title: 'Recurring' }} />
         <Stack.Screen name="transaction/[kind]/[id]" options={{ title: 'Edit Transaction' }} />
         <Stack.Screen name="categories" options={{ title: 'Categories' }} />
         <Stack.Screen name="history" options={{ title: 'History & Trends' }} />
         <Stack.Screen name="export" options={{ title: 'Export' }} />
         <Stack.Screen name="delete-account" options={{ title: 'Delete Account' }} />
+        <Stack.Screen name="recurring/new" options={{ title: 'Recurring', presentation: 'modal' }} />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)/sign-in" options={{ headerShown: false }} />

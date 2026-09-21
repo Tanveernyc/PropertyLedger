@@ -15,6 +15,8 @@ const expense = (overrides: Partial<Expense>): Expense => ({
   period_end: null,
   vendor: null,
   notes: null,
+  recurring_id: null,
+  is_edited: false,
   created_at: '2026-06-15T00:00:00Z',
   ...overrides,
 });

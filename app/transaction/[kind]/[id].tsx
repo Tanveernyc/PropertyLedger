@@ -15,6 +15,8 @@ import {
 } from 'react-native';
 import { getExpense, updateExpense } from '@/db/expenses';
 import { getIncome, updateIncome } from '@/db/income';
+import { skipRecurringMonth } from '@/db/recurring';
+import { monthKey } from '@/lib/dates';
 import { validateTransactionForm, type TransactionValidation } from '@/lib/expense-validation';
 import type { Expense, Income } from '@/types';
 
@@ -67,6 +69,13 @@ export default function EditTransactionScreen() {
       if (!validation.valid || validation.amount === undefined) {
         throw Object.assign(new Error('validation'), { silent: true });
       }
+      if (transaction?.recurring_id) {
+        const originalDate = 'paid_on' in transaction ? transaction.paid_on : transaction.received_on;
+        if (monthKey(date.trim()) !== monthKey(originalDate)) {
+          // Same "skip first" ordering as delete: the vacated month must never be re-posted.
+          await skipRecurringMonth(transaction.recurring_id, originalDate);
+        }
+      }
       if (isExpense) {
         return updateExpense(id, {
           amount: validation.amount,
@@ -75,6 +84,7 @@ export default function EditTransactionScreen() {
           period_end: periodEnd.trim() || null,
           vendor: party.trim() || null,
           notes: notes.trim() || null,
+          is_edited: transaction?.recurring_id ? true : undefined,
         });
       }
       return updateIncome(id, {
@@ -82,11 +92,13 @@ export default function EditTransactionScreen() {
         received_on: date.trim(),
         source: party.trim() || null,
         notes: notes.trim() || null,
+        is_edited: transaction?.recurring_id ? true : undefined,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [isExpense ? 'expenses' : 'income'] });
       queryClient.invalidateQueries({ queryKey: [isExpense ? 'expense' : 'income-entry', id] });
+      queryClient.invalidateQueries({ queryKey: ['recurring'] });
       router.back();
     },
     onError: (e: Error & { silent?: boolean }) => {
@@ -99,6 +111,14 @@ export default function EditTransactionScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <Stack.Screen options={{ title: isExpense ? 'Edit Expense' : 'Edit Income' }} />
+
+      {transaction?.recurring_id ? (
+        <Text style={styles.recurringNote}>
+          ↻ Posted by a monthly rule. Changes here apply to this month only; the rule keeps posting
+          future months at its own amount. Moving it to another month leaves the original month
+          empty for good.
+        </Text>
+      ) : null}
 
       <Text style={styles.label}>Amount ($) *</Text>
       <TextInput
@@ -165,6 +185,7 @@ const styles = StyleSheet.create({
   container: { padding: 16, paddingBottom: 48, gap: 4 },
   spinner: { marginTop: 40 },
   label: { fontSize: 13, fontWeight: '600', color: '#555', marginTop: 12 },
+  recurringNote: { color: '#555', fontSize: 12, marginBottom: 8, lineHeight: 16 },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',

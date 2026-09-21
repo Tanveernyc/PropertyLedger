@@ -19,6 +19,7 @@ import { listCategories } from '@/db/categories';
 import { deleteExpense, listPropertyExpenses } from '@/db/expenses';
 import { deleteIncome, listPropertyIncome } from '@/db/income';
 import { getProperty } from '@/db/properties';
+import { skipRecurringMonth } from '@/db/recurring';
 import { confirmDelete } from '@/lib/confirm-delete';
 import { formatMoney } from '@/lib/money';
 import { buildTimeline, filterTimeline, type TimelineEntry } from '@/lib/timeline';
@@ -42,10 +43,15 @@ export default function PropertyTransactionsScreen() {
   const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: listCategories });
 
   const deleteMutation = useMutation({
-    mutationFn: (entry: TimelineEntry) =>
-      entry.kind === 'expense' ? deleteExpense(entry.id) : deleteIncome(entry.id),
+    mutationFn: async (entry: TimelineEntry) => {
+      // Record the skip first: if the delete then fails the month is merely hidden
+      // from future generation, whereas the reverse order could resurrect it.
+      if (entry.recurring_id) await skipRecurringMonth(entry.recurring_id, entry.date);
+      return entry.kind === 'expense' ? deleteExpense(entry.id) : deleteIncome(entry.id);
+    },
     onSuccess: (_, entry) => {
       queryClient.invalidateQueries({ queryKey: [entry.kind === 'expense' ? 'expenses' : 'income'] });
+      queryClient.invalidateQueries({ queryKey: ['recurring'] });
     },
     onError: (e: Error) => Alert.alert('Could not delete', e.message),
   });
@@ -66,7 +72,9 @@ export default function PropertyTransactionsScreen() {
   const onDelete = (entry: TimelineEntry) => {
     confirmDelete(
       `Delete this ${entry.kind}?`,
-      `${formatMoney(entry.amount)} on ${entry.date} — this cannot be undone.`,
+      entry.recurring_id
+        ? `${formatMoney(entry.amount)} on ${entry.date} — this month will not be posted again by its rule.`
+        : `${formatMoney(entry.amount)} on ${entry.date} — this cannot be undone.`,
       () => deleteMutation.mutate(entry)
     );
   };
@@ -78,6 +86,11 @@ export default function PropertyTransactionsScreen() {
       <Stack.Screen options={{ title: property?.name ?? 'Property' }} />
 
       <View style={styles.header}>
+        <Link href={{ pathname: '/property/[id]/recurring', params: { id } }} asChild>
+          <Pressable>
+            <Text style={styles.editLink}>Recurring</Text>
+          </Pressable>
+        </Link>
         <Link href={{ pathname: '/property/[id]/edit', params: { id } }} asChild>
           <Pressable>
             <Text style={styles.editLink}>Edit details</Text>
@@ -152,7 +165,10 @@ export default function PropertyTransactionsScreen() {
                 }
               >
                 <View style={styles.rowText}>
-                  <Text style={styles.rowCategory}>{categoryName(item.category_id)}</Text>
+                  <Text style={styles.rowCategory}>
+                    {item.recurring_id ? '↻ ' : ''}
+                    {categoryName(item.category_id)}
+                  </Text>
                   <Text style={styles.rowMeta}>
                     {item.date}
                     {item.party ? ` · ${item.party}` : ''}
@@ -173,7 +189,7 @@ export default function PropertyTransactionsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  header: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 16, paddingTop: 8 },
+  header: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16, paddingHorizontal: 16, paddingTop: 8 },
   editLink: { color: '#2563eb', fontSize: 14 },
   // ScrollView defaults to flexShrink: 1, which lets the column squash the strip
   // under the date row; pin it to its content height.

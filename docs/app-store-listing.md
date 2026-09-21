@@ -82,6 +82,14 @@ numbers straight and their tax prep boring.
 
 ---
 
+## What's New (1.1)
+
+```
+Recurring income and expenses. Set up a rent payment or a monthly bill once — PropertyLedger posts it on the 1st of every month, backfills from the start month you choose, and lets you edit or delete any single month without touching the rest. Stop a rule any time; your history stays.
+```
+
+---
+
 ## Keywords (100 max, 97 used)
 
 ```

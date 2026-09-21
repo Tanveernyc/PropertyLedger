@@ -1,4 +1,5 @@
 // Add tab — expense (Phase 5) and income (Phase 6) rapid entry behind one toggle.
+import { Link } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AddTransactionForm } from '@/components/add-transaction-form';
@@ -22,6 +23,12 @@ export default function AddScreen() {
           </Pressable>
         ))}
       </View>
+      <Link
+        href={{ pathname: '/recurring/new', params: { kind } }}
+        style={styles.recurringLink}
+      >
+        Repeats every month? Set up a recurring {kind} →
+      </Link>
       {/* key remounts the form on switch so per-kind state starts clean */}
       <AddTransactionForm key={kind} kind={kind} />
     </View>
@@ -41,4 +48,5 @@ const styles = StyleSheet.create({
   segmentButtonActive: { backgroundColor: '#fff' },
   segmentText: { color: '#666' },
   segmentTextActive: { color: '#111', fontWeight: '600' },
+  recurringLink: { color: '#2563eb', fontSize: 13, textAlign: 'center', marginBottom: 4 },
 });

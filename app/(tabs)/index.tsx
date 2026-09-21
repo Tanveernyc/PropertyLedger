@@ -3,6 +3,7 @@
 // presentation in src/components/dashboard-view.tsx.
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import { useEffect } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { DashboardView } from '@/components/dashboard-view';
 import { useSession } from '@/components/session-provider';
@@ -36,6 +37,14 @@ export default function DashboardScreen() {
   const { data: expenses } = useQuery({ queryKey: ['expenses', 'all'], queryFn: listAllExpenses });
   const { data: income } = useQuery({ queryKey: ['income', 'all'], queryFn: listAllIncome });
   const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: listCategories });
+
+  // First run: a signed-in user with no ledgers (archived included) is sent to
+  // the chooser instead of an empty dashboard. Onboarding invalidates
+  // ['properties'] on success, so this refetches to a non-empty list and the
+  // effect does not fire again.
+  useEffect(() => {
+    if (properties && properties.length === 0) router.replace('/onboarding');
+  }, [properties]);
 
   const model = buildDashboardModel(properties ?? [], expenses ?? [], income ?? [], todayISO());
   const categoryNames = new Map((categories ?? []).map((c) => [c.id, c.name]));

@@ -16,6 +16,26 @@ App Store: **PropertyLedger: Rental P&L** (bundle `com.trueorganichub.propertyle
 
 Money is `numeric(12,2)` in Postgres and integer-cent math in the app. Dates are ISO `YYYY-MM-DD` strings end to end.
 
+## Using the app
+
+**First run.** Sign up with an email and password. Go to **Properties → + Add**, name the property, pick *rental* or *personal*, save.
+
+**Log a one-off entry.** **Add** tab → choose *Expense* or *Income* → tap the property → tap a category (tap **+ New** to create one on the spot) → amount → date defaults to today → optional vendor/source, covers-period, notes → **Save**. The form keeps the property and category selected so the next entry is amount + save.
+
+**Set up a monthly bill or rent.** On the **Add** tab tap *Repeats every month? Set up a recurring…*, or from a property tap **Recurring → + Expense rule / + Income rule**. Pick property, category, monthly amount, vendor/source, the **start month**, and whether it runs *until I stop it* or *for N months*. Save: every month from the start month through today is posted at once (the form shows how many), and each new month posts automatically when the app opens. Recurring entries show a ↻ mark.
+
+**Change a recurring bill.** Property → **Recurring → Edit**. Change anything - amount, vendor, category, start month, end. By default only future months change. Turn on **Also update months already posted** and pick a from-month to rewrite past entries too; months you edited by hand are left alone. **Stop** ends the rule and keeps history; **Delete** removes the rule and keeps its entries.
+
+**Fix or remove one month.** Tap the entry → edit and save (the rule will never overwrite it). To delete, open the property and swipe the row left → **Delete**; a deleted recurring month is not re-posted.
+
+**Read the ledger.** Tap a property: filter by category chips or a date range, and tap the sort chip to switch *Oldest first* (Jan → Dec), *Newest first*, or *Largest first*.
+
+**Reports.** *This Year / Last Year / All Time / Custom* → portfolio net, per-property net, expenses by category. **History & trends** charts one category over time to spot rising costs.
+
+**Export.** Dashboard → **Export** → share a CSV of every entry (Files, Mail, accountant).
+
+**Account.** Dashboard footer: Categories, Export, Support (email), Sign out, Delete account (removes everything, immediately).
+
 ## Stack
 
 Expo SDK 57 · expo-router · React Native 0.86 · TypeScript · @tanstack/react-query · @supabase/supabase-js · date-fns · victory-native (charts) · Jest + jest-expo.

@@ -109,7 +109,13 @@ export default function EditTransactionScreen() {
   if (isPending) return <ActivityIndicator style={styles.spinner} />;
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+      // Scroll the focused field (and the Save button) above the keyboard instead of hiding them.
+      automaticallyAdjustKeyboardInsets
+      keyboardDismissMode="interactive"
+    >
       <Stack.Screen options={{ title: isExpense ? 'Edit Expense' : 'Edit Income' }} />
 
       {transaction?.recurring_id ? (

@@ -126,7 +126,13 @@ export function RecurringRuleForm({ kind, initialPropertyId, onSaved }: Props) {
   });
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+      // Scroll the focused field (and the Save button) above the keyboard instead of hiding them.
+      automaticallyAdjustKeyboardInsets
+      keyboardDismissMode="interactive"
+    >
       <Text style={styles.help}>
         Posts one {kind} on the 1st of every month, starting from the month you pick — including
         past months up to today. You can edit or delete any single month afterwards.

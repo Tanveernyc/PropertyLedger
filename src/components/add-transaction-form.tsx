@@ -121,7 +121,13 @@ export function AddTransactionForm({ kind }: { kind: CategoryKind }) {
   const set = (patch: Partial<AddTransactionState>) => setState((s) => ({ ...s, ...patch }));
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+      // Scroll the focused field (and the Save button) above the keyboard instead of hiding them.
+      automaticallyAdjustKeyboardInsets
+      keyboardDismissMode="interactive"
+    >
       <Text style={styles.label}>Property *</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
         {(properties ?? []).map((p) => (

@@ -47,11 +47,12 @@ export default function EditPropertyScreen() {
 
   const toggleArchive = () => {
     const archiving = !property.is_archived;
+    const noun = nounFor(property.property_type).one.toLowerCase();
     Alert.alert(
-      archiving ? 'Archive property?' : 'Unarchive property?',
+      archiving ? `Archive ${noun}?` : `Unarchive ${noun}?`,
       archiving
-        ? 'It will be hidden from lists but all its history is kept.'
-        : 'It will reappear in your active property lists.',
+        ? `It will be hidden from your ${noun} lists but all its history is kept.`
+        : `It will reappear in your active ${noun} lists.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {

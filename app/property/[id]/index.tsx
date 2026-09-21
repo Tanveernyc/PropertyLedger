@@ -22,7 +22,14 @@ import { getProperty } from '@/db/properties';
 import { skipRecurringMonth } from '@/db/recurring';
 import { confirmDelete } from '@/lib/confirm-delete';
 import { formatMoney } from '@/lib/money';
-import { buildTimeline, filterTimeline, type TimelineEntry } from '@/lib/timeline';
+import {
+  buildTimeline,
+  filterTimeline,
+  sortTimeline,
+  TIMELINE_SORT_LABELS,
+  type TimelineEntry,
+  type TimelineSort,
+} from '@/lib/timeline';
 import { colors, money, type, ui } from '@/theme';
 
 export default function PropertyTransactionsScreen() {
@@ -31,6 +38,10 @@ export default function PropertyTransactionsScreen() {
   const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
+  // Ledger order: oldest first by default, like a paper ledger. Tap to cycle.
+  const [sort, setSort] = useState<TimelineSort>('oldest');
+  const SORT_CYCLE: TimelineSort[] = ['oldest', 'newest', 'largest'];
+  const nextSort = () => setSort((s) => SORT_CYCLE[(SORT_CYCLE.indexOf(s) + 1) % SORT_CYCLE.length]);
 
   const { data: property } = useQuery({ queryKey: ['property', id], queryFn: () => getProperty(id) });
   const { data: expenses, isPending: loadingExpenses } = useQuery({
@@ -59,12 +70,15 @@ export default function PropertyTransactionsScreen() {
 
   const timeline = useMemo(
     () =>
-      filterTimeline(buildTimeline(expenses ?? [], income ?? []), {
-        from: from.trim() || undefined,
-        to: to.trim() || undefined,
-        categoryId,
-      }),
-    [expenses, income, from, to, categoryId]
+      sortTimeline(
+        filterTimeline(buildTimeline(expenses ?? [], income ?? []), {
+          from: from.trim() || undefined,
+          to: to.trim() || undefined,
+          categoryId,
+        }),
+        sort
+      ),
+    [expenses, income, from, to, categoryId, sort]
   );
 
   const categoryName = (catId: string) =>
@@ -140,6 +154,11 @@ export default function PropertyTransactionsScreen() {
           autoCapitalize="none"
         />
       </View>
+      <View style={styles.sortRow}>
+        <Pressable style={[styles.chip, styles.chipActive]} onPress={nextSort} accessibilityRole="button">
+          <Text style={styles.chipTextActive}>↕ {TIMELINE_SORT_LABELS[sort]}</Text>
+        </Pressable>
+      </View>
 
       {loading ? (
         <ActivityIndicator style={styles.spinner} />
@@ -203,7 +222,8 @@ const styles = StyleSheet.create({
   chipActive: { ...ui.chipActive },
   chipText: { ...ui.chipText },
   chipTextActive: { ...ui.chipTextActive },
-  dateRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 12, paddingBottom: 10 },
+  dateRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 12, paddingBottom: 8 },
+  sortRow: { flexDirection: 'row', paddingHorizontal: 12, paddingBottom: 10 },
   dateInput: { ...ui.input, flex: 1, fontSize: 14 },
   spinner: { marginTop: 32 },
   empty: { ...ui.empty },

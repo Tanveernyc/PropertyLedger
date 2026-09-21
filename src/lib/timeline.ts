@@ -83,3 +83,27 @@ export function filterTimeline(entries: TimelineEntry[], filter: TimelineFilter)
     return true;
   });
 }
+
+/** How a ledger list is ordered. 'oldest' reads like a ledger: January, February, March. */
+export type TimelineSort = 'oldest' | 'newest' | 'largest';
+
+export const TIMELINE_SORT_LABELS: Record<TimelineSort, string> = {
+  oldest: 'Oldest first',
+  newest: 'Newest first',
+  largest: 'Largest first',
+};
+
+/** Returns a sorted copy; never mutates. Ties fall back to date then created_at. */
+export function sortTimeline(entries: TimelineEntry[], sort: TimelineSort): TimelineEntry[] {
+  const byDateAsc = (a: TimelineEntry, b: TimelineEntry) =>
+    a.date !== b.date ? (a.date < b.date ? -1 : 1) : a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0;
+  const copy = [...entries];
+  switch (sort) {
+    case 'oldest':
+      return copy.sort(byDateAsc);
+    case 'newest':
+      return copy.sort((a, b) => byDateAsc(b, a));
+    case 'largest':
+      return copy.sort((a, b) => (b.amount !== a.amount ? b.amount - a.amount : byDateAsc(a, b)));
+  }
+}

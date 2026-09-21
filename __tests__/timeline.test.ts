@@ -1,6 +1,6 @@
 // Phase 7 tests — timeline (spec §5 Phase 7): merge/sort of two lists into one
 // newest-first timeline; date-range filter inclusive on both ends; category filter.
-import { buildTimeline, filterTimeline } from '../src/lib/timeline';
+import { buildTimeline, filterTimeline, sortTimeline } from '../src/lib/timeline';
 import type { Expense, Income } from '../src/types';
 
 const expense = (overrides: Partial<Expense>): Expense => ({
@@ -123,5 +123,44 @@ describe('recurring linkage on timeline entries', () => {
 
   it('is null for manual entries', () => {
     expect(buildTimeline([expense({})], [])[0].recurring_id).toBeNull();
+  });
+});
+
+describe('sortTimeline', () => {
+  const entries = buildTimeline(
+    [
+      expense({ id: 'e-mar', paid_on: '2026-03-01', amount: 50, created_at: '2026-03-01T00:00:00Z' }),
+      expense({ id: 'e-jan', paid_on: '2026-01-01', amount: 900, created_at: '2026-01-01T00:00:00Z' }),
+    ],
+    [income({ id: 'i-feb', received_on: '2026-02-01', amount: 300, created_at: '2026-02-01T00:00:00Z' })]
+  );
+
+  it('oldest-first puts January before February before March', () => {
+    expect(sortTimeline(entries, 'oldest').map((e) => e.id)).toEqual(['e-jan', 'i-feb', 'e-mar']);
+  });
+
+  it('newest-first is the reverse', () => {
+    expect(sortTimeline(entries, 'newest').map((e) => e.id)).toEqual(['e-mar', 'i-feb', 'e-jan']);
+  });
+
+  it('largest-first orders by amount regardless of kind', () => {
+    expect(sortTimeline(entries, 'largest').map((e) => e.id)).toEqual(['e-jan', 'i-feb', 'e-mar']);
+  });
+
+  it('does not mutate the input', () => {
+    const before = entries.map((e) => e.id);
+    sortTimeline(entries, 'oldest');
+    expect(entries.map((e) => e.id)).toEqual(before);
+  });
+
+  it('same-day entries keep a stable order: earlier created first when oldest-first', () => {
+    const sameDay = buildTimeline(
+      [
+        expense({ id: 'second', paid_on: '2026-05-01', created_at: '2026-05-01T10:00:00Z' }),
+        expense({ id: 'first', paid_on: '2026-05-01', created_at: '2026-05-01T09:00:00Z' }),
+      ],
+      []
+    );
+    expect(sortTimeline(sameDay, 'oldest').map((e) => e.id)).toEqual(['first', 'second']);
   });
 });

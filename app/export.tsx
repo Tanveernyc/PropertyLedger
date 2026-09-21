@@ -1,6 +1,6 @@
-// Export screen (Phase 10) — "Export All Data": writes a JSON of every table and
-// a CSV of transactions, then hands both to the native share sheet. This is the
-// escape hatch that keeps the data portable (spec §5 Phase 10).
+// Export screen (Phase 10) — "Export CSV": writes a CSV of every transaction and
+// hands it to the native share sheet. This is the escape hatch that keeps the
+// data portable (spec §5 Phase 10).
 import { useQuery } from '@tanstack/react-query';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
@@ -10,7 +10,7 @@ import { listCategories } from '@/db/categories';
 import { listAllExpenses } from '@/db/expenses';
 import { listAllIncome } from '@/db/income';
 import { listProperties } from '@/db/properties';
-import { buildExportJson, buildTransactionsCsv } from '@/lib/export';
+import { buildTransactionsCsv } from '@/lib/export';
 
 export default function ExportScreen() {
   const [busy, setBusy] = useState(false);
@@ -32,15 +32,9 @@ export default function ExportScreen() {
       const tables = { properties, categories, expenses, income };
       const stamp = new Date().toISOString().slice(0, 10);
 
-      // Write both files to the app cache, then share them one after the other
-      // (the iOS share sheet takes one payload at a time).
-      const jsonFile = new File(Paths.cache, `propertyledger-export-${stamp}.json`);
-      jsonFile.write(JSON.stringify(buildExportJson(tables, new Date().toISOString()), null, 2));
-
+      // Write the file to the app cache, then hand it to the share sheet.
       const csvFile = new File(Paths.cache, `propertyledger-transactions-${stamp}.csv`);
       csvFile.write(buildTransactionsCsv(tables));
-
-      await Sharing.shareAsync(jsonFile.uri, { mimeType: 'application/json' });
       await Sharing.shareAsync(csvFile.uri, { mimeType: 'text/csv' });
     } catch (e) {
       Alert.alert('Export failed', (e as Error).message);
@@ -51,17 +45,17 @@ export default function ExportScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Export All Data</Text>
+      <Text style={styles.heading}>Export to CSV</Text>
       <Text style={styles.body}>
-        Produces two files via the share sheet: a JSON snapshot of every table
-        (properties, categories, expenses, income) and a spreadsheet-ready CSV of
-        all transactions. Save them anywhere - your data is never locked in.
+        Creates a spreadsheet-ready CSV of every income and expense entry across all
+        your properties and opens the share sheet. Email it, save it to Files, or hand
+        it to your accountant - your data is never locked in.
       </Text>
       <Pressable style={styles.button} onPress={exportAll} disabled={!ready || busy}>
         {busy ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.buttonText}>Export All Data</Text>
+          <Text style={styles.buttonText}>Export CSV</Text>
         )}
       </Pressable>
       {!ready ? <Text style={styles.loading}>Loading data…</Text> : null}

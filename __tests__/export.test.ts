@@ -2,7 +2,6 @@
 // escapes commas and quotes in notes/vendor fields; empty database exports a
 // valid empty structure.
 import {
-  buildExportJson,
   buildTransactionsCsv,
   csvEscape,
   TRANSACTIONS_CSV_HEADER,
@@ -61,34 +60,6 @@ const income = (overrides: Partial<Income>): Income => ({
   is_edited: false,
   created_at: '2026-06-01T00:00:00Z',
   ...overrides,
-});
-
-describe('buildExportJson', () => {
-  it('includes every table plus format metadata', () => {
-    const bundle = buildExportJson(
-      { properties: [property], categories: [category], expenses: [expense({})], income: [income({})] },
-      '2026-07-15T12:00:00Z'
-    );
-    expect(Object.keys(bundle).sort()).toEqual(
-      ['categories', 'expenses', 'exported_at', 'format', 'income', 'properties', 'version'].sort()
-    );
-    expect(bundle.format).toBe('propertyledger-export');
-    expect(bundle.properties).toHaveLength(1);
-    expect(bundle.exported_at).toBe('2026-07-15T12:00:00Z');
-  });
-
-  it('an empty database exports a valid empty structure', () => {
-    const bundle = buildExportJson(
-      { properties: [], categories: [], expenses: [], income: [] },
-      '2026-07-15T12:00:00Z'
-    );
-    expect(bundle.properties).toEqual([]);
-    expect(bundle.categories).toEqual([]);
-    expect(bundle.expenses).toEqual([]);
-    expect(bundle.income).toEqual([]);
-    // Round-trips through JSON cleanly.
-    expect(JSON.parse(JSON.stringify(bundle))).toEqual(bundle);
-  });
 });
 
 describe('csvEscape', () => {

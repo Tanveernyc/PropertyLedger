@@ -1,6 +1,6 @@
 // Export builders — pure functions, no React, no network (spec §4 rule).
-// Phase 10: the escape hatch. JSON of every table + CSV of transactions so the
-// free tier can never hold the data hostage (spec §5 Phase 10).
+// Phase 10: the escape hatch. A spreadsheet-ready CSV of every transaction so
+// the data can never be held hostage (spec §5 Phase 10).
 import type { Category, Expense, Income, Property } from '@/types';
 import { buildTimeline } from './timeline';
 
@@ -9,26 +9,6 @@ export interface ExportTables {
   categories: Category[];
   expenses: Expense[];
   income: Income[];
-}
-
-export interface ExportBundle extends ExportTables {
-  /** Format marker + timestamp so a future import knows what it is reading. */
-  format: 'propertyledger-export';
-  version: 1;
-  exported_at: string;
-}
-
-/** Full-database JSON export; empty tables stay as valid empty arrays. */
-export function buildExportJson(tables: ExportTables, exportedAt: string): ExportBundle {
-  return {
-    format: 'propertyledger-export',
-    version: 1,
-    exported_at: exportedAt,
-    properties: tables.properties,
-    categories: tables.categories,
-    expenses: tables.expenses,
-    income: tables.income,
-  };
 }
 
 /**

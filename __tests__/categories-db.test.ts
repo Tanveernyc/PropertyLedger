@@ -41,6 +41,7 @@ const systemCategory: Category = {
   name: 'Insurance',
   kind: 'expense',
   is_system: true,
+  scope: 'rental',
   created_at: '2026-07-15T00:00:00Z',
 };
 

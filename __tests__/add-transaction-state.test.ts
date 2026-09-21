@@ -42,6 +42,7 @@ describe('recent-first category ordering', () => {
     name,
     kind,
     is_system: true,
+    scope: 'rental',
     created_at: '2026-07-15T00:00:00Z',
   });
   const categories = [

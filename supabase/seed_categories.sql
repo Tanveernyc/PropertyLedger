@@ -38,3 +38,38 @@ insert into categories (name, kind, is_system) values
   ('Parking','income',true),
   ('Insurance Payout','income',true),
   ('Other Income','income',true);
+
+-- Personal budget categories
+update categories set scope = 'both'
+ where is_system = true and name in (
+  'Insurance','Water','Sewer','Garbage','Electric','Gas/Heating','Internet/Cable',
+  'HOA Fees','Repairs','Maintenance','Cleaning','Supplies','Appliances',
+  'Legal/Professional Fees','Bank/Loan Fees','Other Expense','Other Income');
+
+insert into categories (name, kind, is_system, scope) values
+  ('Groceries','expense',true,'personal'),
+  ('Dining Out','expense',true,'personal'),
+  ('Rent/Mortgage','expense',true,'personal'),
+  ('Car Payment','expense',true,'personal'),
+  ('Car Insurance','expense',true,'personal'),
+  ('Fuel','expense',true,'personal'),
+  ('Public Transit','expense',true,'personal'),
+  ('Phone','expense',true,'personal'),
+  ('Health/Medical','expense',true,'personal'),
+  ('Childcare','expense',true,'personal'),
+  ('Education','expense',true,'personal'),
+  ('Subscriptions','expense',true,'personal'),
+  ('Clothing','expense',true,'personal'),
+  ('Personal Care','expense',true,'personal'),
+  ('Entertainment','expense',true,'personal'),
+  ('Gifts','expense',true,'personal'),
+  ('Travel','expense',true,'personal'),
+  ('Charity','expense',true,'personal'),
+  ('Debt Payment','expense',true,'personal'),
+  ('Savings Transfer','expense',true,'personal'),
+  ('Salary','income',true,'personal'),
+  ('Bonus','income',true,'personal'),
+  ('Freelance','income',true,'personal'),
+  ('Interest/Dividends','income',true,'personal'),
+  ('Refund','income',true,'personal'),
+  ('Gift Received','income',true,'personal');

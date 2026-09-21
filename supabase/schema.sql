@@ -130,3 +130,8 @@ alter table recurring_rules
 -- Phase 15b: vendor/source template on recurring rules.
 alter table recurring_rules
   add column if not exists party text;
+
+-- CATEGORY SCOPE (personal budgets)
+alter table categories
+  add column if not exists scope text not null default 'rental'
+  check (scope in ('rental', 'personal', 'both'));

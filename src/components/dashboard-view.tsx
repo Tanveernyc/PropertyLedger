@@ -43,7 +43,7 @@ export function DashboardView({
 
       <Text style={styles.sectionTitle}>Properties</Text>
       {propertyCards.length === 0 ? (
-        <Text style={styles.empty}>No properties yet — add one on the Properties tab.</Text>
+        <Text style={styles.empty}>No properties yet, add one on the Properties tab.</Text>
       ) : (
         propertyCards.map((card) => (
           <Pressable

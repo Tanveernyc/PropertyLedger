@@ -73,8 +73,8 @@ export default function PropertyTransactionsScreen() {
     confirmDelete(
       `Delete this ${entry.kind}?`,
       entry.recurring_id
-        ? `${formatMoney(entry.amount)} on ${entry.date} — this month will not be posted again by its rule.`
-        : `${formatMoney(entry.amount)} on ${entry.date} — this cannot be undone.`,
+        ? `${formatMoney(entry.amount)} on ${entry.date}, this month will not be posted again by its rule.`
+        : `${formatMoney(entry.amount)} on ${entry.date}, this cannot be undone.`,
       () => deleteMutation.mutate(entry)
     );
   };

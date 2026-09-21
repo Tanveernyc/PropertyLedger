@@ -108,11 +108,11 @@ export default function HistoryScreen() {
                 <Text style={styles.cell}>{point.period}</Text>
                 <Text style={styles.cellRight}>{formatMoney(point.total)}</Text>
                 <Text style={[styles.cellRight, changeStyle(point.changeFromPrev)]}>
-                  {point.changeFromPrev === null ? '—' : formatMoney(point.changeFromPrev)}
+                  {point.changeFromPrev === null ? '-' : formatMoney(point.changeFromPrev)}
                 </Text>
                 <Text style={[styles.cellRight, changeStyle(point.changeFromPrev)]}>
                   {point.pctChangeFromPrev === null
-                    ? '—'
+                    ? '-'
                     : `${point.pctChangeFromPrev >= 0 ? '+' : ''}${point.pctChangeFromPrev.toFixed(1)}%`}
                 </Text>
               </View>

@@ -134,7 +134,7 @@ export function RecurringRuleForm({ kind, initialPropertyId, onSaved }: Props) {
       keyboardDismissMode="interactive"
     >
       <Text style={styles.help}>
-        Posts one {kind} on the 1st of every month, starting from the month you pick, including
+        Posts one {kind} on the 1st of every month, starting from the month you pick - including
         past months up to today. You can edit or delete any single month afterwards.
       </Text>
 

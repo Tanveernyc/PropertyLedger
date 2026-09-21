@@ -114,7 +114,7 @@ export default function ReportsScreen() {
       ))}
 
       <Link href="/history" style={styles.historyLink}>
-        History &amp; trends, “did my insurance go up?” →
+        History &amp; trends - “did my insurance go up?” →
       </Link>
 
       <Text style={styles.sectionTitle}>Expenses by category</Text>

@@ -61,7 +61,7 @@ export default function EditRecurringRuleScreen() {
 
       <Text style={styles.help}>
         Currently {formatMoney(rule.amount)}/mo from {monthKey(rule.start_month)}. A new amount applies
-        to months that haven't been posted yet, entries already in your ledger keep their numbers.
+        to months that haven't been posted yet - entries already in your ledger keep their numbers.
       </Text>
 
       <Text style={styles.label}>Amount ($) each month *</Text>

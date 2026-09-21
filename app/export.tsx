@@ -55,7 +55,7 @@ export default function ExportScreen() {
       <Text style={styles.body}>
         Produces two files via the share sheet: a JSON snapshot of every table
         (properties, categories, expenses, income) and a spreadsheet-ready CSV of
-        all transactions. Save them anywhere, your data is never locked in.
+        all transactions. Save them anywhere - your data is never locked in.
       </Text>
       <Pressable style={styles.button} onPress={exportAll} disabled={!ready || busy}>
         {busy ? (

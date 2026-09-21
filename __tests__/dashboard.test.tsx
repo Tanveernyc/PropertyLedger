@@ -94,6 +94,21 @@ describe('buildDashboardModel', () => {
     expect(model.propertyCards).toEqual([]);
     expect(model.recent).toEqual([]);
   });
+
+  it('month figures cover only the current month and carry a savings rate', () => {
+    const model = buildDashboardModel(
+      [],
+      [expense({ id: 'e-this', amount: 400, paid_on: '2026-07-02' }), expense({ id: 'e-last', amount: 999, paid_on: '2026-06-30' })],
+      [income({ id: 'i-this', amount: 1000, received_on: '2026-07-01' })],
+      TODAY
+    );
+    expect(model.monthPL).toEqual({ totalIncome: 1000, totalExpense: 400, net: 600 });
+    expect(model.monthSavingsRate).toBeCloseTo(0.6, 10);
+  });
+  it('month savings rate is null when the month has no income', () => {
+    const model = buildDashboardModel([], [expense({ id: 'e', amount: 10, paid_on: '2026-07-02' })], [], TODAY);
+    expect(model.monthSavingsRate).toBeNull();
+  });
 });
 
 describe('DashboardView', () => {

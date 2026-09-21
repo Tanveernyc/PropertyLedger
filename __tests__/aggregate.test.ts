@@ -5,7 +5,10 @@ import {
   calcByCategory,
   calcPL,
   calcPLByProperty,
+  lastMonthRange,
   lastYearRange,
+  savingsRate,
+  thisMonthRange,
   thisYearRange,
 } from '../src/lib/aggregate';
 import type { Category, Expense, Income, Property } from '../src/types';
@@ -205,5 +208,29 @@ describe('range presets', () => {
 
   it('lastYearRange covers the prior calendar year', () => {
     expect(lastYearRange('2026-07-15')).toEqual({ from: '2025-01-01', to: '2025-12-31' });
+  });
+});
+
+describe('month presets', () => {
+  it('thisMonthRange covers the 1st through the last day of the month', () => {
+    expect(thisMonthRange('2026-02-10')).toEqual({ from: '2026-02-01', to: '2026-02-28' });
+    expect(thisMonthRange('2024-02-10')).toEqual({ from: '2024-02-01', to: '2024-02-29' });
+    expect(thisMonthRange('2026-12-31')).toEqual({ from: '2026-12-01', to: '2026-12-31' });
+  });
+  it('lastMonthRange rolls over the year boundary', () => {
+    expect(lastMonthRange('2026-01-15')).toEqual({ from: '2025-12-01', to: '2025-12-31' });
+    expect(lastMonthRange('2026-03-01')).toEqual({ from: '2026-02-01', to: '2026-02-28' });
+  });
+});
+
+describe('savingsRate', () => {
+  it('is net over income, exact for cents', () => {
+    expect(savingsRate({ totalIncome: 5000, totalExpense: 4100, net: 900 })).toBeCloseTo(0.18, 10);
+  });
+  it('is negative when overspending', () => {
+    expect(savingsRate({ totalIncome: 1000, totalExpense: 1250, net: -250 })).toBeCloseTo(-0.25, 10);
+  });
+  it('is null with no income (nothing to save from)', () => {
+    expect(savingsRate({ totalIncome: 0, totalExpense: 300, net: -300 })).toBeNull();
   });
 });

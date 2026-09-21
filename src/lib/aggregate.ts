@@ -2,6 +2,7 @@
 // PURE FUNCTIONS: no React, no network. Screens call these; they never do
 // arithmetic inline (spec §4 rule). All sums run in integer cents to avoid
 // floating-point drift, then convert back to dollars at the end.
+import { addMonths, endOfMonth, format, parseISO, startOfMonth } from 'date-fns';
 import type { Category, Expense, Income, Property } from '@/types';
 
 /** Inclusive date range; open bounds mean "no limit" (All Time = {}). */
@@ -159,4 +160,25 @@ export function thisYearRange(todayIso: string): DateRange {
 export function lastYearRange(todayIso: string): DateRange {
   const year = Number(todayIso.slice(0, 4)) - 1;
   return { from: `${year}-01-01`, to: `${year}-12-31` };
+}
+
+/** Preset: This Month — the 1st through the last day of today's month. */
+export function thisMonthRange(todayIso: string): DateRange {
+  const d = parseISO(todayIso);
+  return { from: format(startOfMonth(d), 'yyyy-MM-dd'), to: format(endOfMonth(d), 'yyyy-MM-dd') };
+}
+
+/** Preset: Last Month. */
+export function lastMonthRange(todayIso: string): DateRange {
+  const d = addMonths(parseISO(todayIso), -1);
+  return { from: format(startOfMonth(d), 'yyyy-MM-dd'), to: format(endOfMonth(d), 'yyyy-MM-dd') };
+}
+
+/**
+ * Net as a fraction of income: the one number a household tracks (spec §6).
+ * Null when there is no income - a rate of "saved -∞%" helps nobody.
+ */
+export function savingsRate(pl: PL): number | null {
+  if (pl.totalIncome <= 0) return null;
+  return toCents(pl.net) / toCents(pl.totalIncome);
 }

@@ -39,6 +39,7 @@ const NOTES = 'e2e';
 const START_MONTH = '2026-01-01';
 const OCCURRENCES = 3;
 const EXPECTED_DATES = ['2026-01-01', '2026-02-01', '2026-03-01'];
+const HOUSEHOLD_NAME = 'e2e Household'; // personal ledger created by step a3, removed by cleanup
 
 let failures = 0;
 
@@ -90,6 +91,7 @@ async function main(): Promise<void> {
   if (catErr) throw catErr;
 
   let ruleId: string | null = null;
+  let personalRuleId: string | null = null;
   const survivingIds: string[] = [];
   try {
     // a. create rule → sync → exactly 3 rows, first-of-month dates, is_edited=false
@@ -116,6 +118,41 @@ async function main(): Promise<void> {
         JSON.stringify(datesA) === JSON.stringify(EXPECTED_DATES) &&
         rows.every((r) => r.is_edited === false && Number(r.amount) === AMOUNT && r.user_id === userId && r.notes === NOTES),
       `inserted ${insertedA}; rows: ${summarize(rows)}`
+    );
+
+    // a3. a personal budget can run the same engine with a personal-scope category.
+    const { data: household, error: hhErr } = await supabase
+      .from('properties')
+      .insert({ user_id: userId, name: HOUSEHOLD_NAME, property_type: 'personal' })
+      .select()
+      .single();
+    if (hhErr) throw hhErr;
+    const { data: groceries, error: grocErr } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('name', 'Groceries')
+      .eq('scope', 'personal')
+      .single();
+    if (grocErr) throw grocErr;
+    const prule = await createRecurringRule({
+      property_id: household.id,
+      category_id: groceries.id,
+      kind: 'expense',
+      amount: 450,
+      notes: NOTES,
+      start_month: START_MONTH,
+      end_mode: 'count',
+      occurrences: 2,
+    });
+    personalRuleId = prule.id;
+    const pInserted = await syncRule(prule, '2026-09-18');
+    const pRows = await listExpensesForRule(prule.id);
+    check(
+      'a3. personal ledger rule posts',
+      pInserted === 2 &&
+        pRows.length === 2 &&
+        pRows.every((r) => r.property_id === household.id && r.category_id === groceries.id && Number(r.amount) === 450),
+      `inserted ${pInserted} on ${HOUSEHOLD_NAME} (${household.id}); rows: ${summarize(pRows)}`
     );
 
     // b. sync again → 0 inserted, still 3
@@ -184,6 +221,7 @@ async function main(): Promise<void> {
   } finally {
     // f. cleanup — only rows tagged notes='e2e' for the demo user, through the signed-in (RLS-scoped) client.
     if (ruleId) await supabase.from('recurring_rules').delete().eq('id', ruleId).eq('notes', NOTES);
+    if (personalRuleId) await supabase.from('recurring_rules').delete().eq('id', personalRuleId).eq('notes', NOTES);
     const { data: deleted, error: delErr } = await supabase
       .from('expenses')
       .delete()
@@ -192,6 +230,18 @@ async function main(): Promise<void> {
       .select('id');
     if (delErr) throw delErr;
     await supabase.from('recurring_rules').delete().eq('user_id', userId).eq('notes', NOTES);
+    // The e2e Household ledger (step a3) — by exact name and user, after its rule + expenses are gone.
+    const { error: hhDelErr } = await supabase
+      .from('properties')
+      .delete()
+      .eq('user_id', userId)
+      .eq('name', HOUSEHOLD_NAME);
+    if (hhDelErr) throw hhDelErr;
+    const { count: afterHouseholds } = await supabase
+      .from('properties')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('name', HOUSEHOLD_NAME);
     const afterExpenses = await countE2eRows(userId, 'expenses');
     const afterIncome = await countE2eRows(userId, 'income');
     const { count: afterRules } = await supabase
@@ -201,8 +251,8 @@ async function main(): Promise<void> {
       .eq('notes', NOTES);
     check(
       'f. cleanup',
-      afterExpenses === 0 && afterIncome === 0 && (afterRules ?? 0) === 0,
-      `deleted ${(deleted ?? []).length} expenses; remaining notes='e2e' → expenses ${afterExpenses}, income ${afterIncome}, recurring_rules ${afterRules ?? 0}`
+      afterExpenses === 0 && afterIncome === 0 && (afterRules ?? 0) === 0 && (afterHouseholds ?? 0) === 0,
+      `deleted ${(deleted ?? []).length} expenses; remaining notes='e2e' → expenses ${afterExpenses}, income ${afterIncome}, recurring_rules ${afterRules ?? 0}; '${HOUSEHOLD_NAME}' ledgers ${afterHouseholds ?? 0}`
     );
     await supabase.auth.signOut();
   }

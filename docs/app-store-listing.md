@@ -101,6 +101,50 @@ those from the name and subtitle, so repeating them wastes the field.
 
 ---
 
+## 1.2 - personal budgets (apply after 1.0 approval)
+
+Do not touch App Store Connect metadata until version 1.0 is approved — editing
+name/subtitle/keywords on a version under review restarts the review. Once 1.0
+is live, apply the following with the 1.2 build (spec
+`docs/superpowers/specs/2026-09-21-personal-budgets-design.md` §7). App Name and
+Bundle ID are unchanged.
+
+**Subtitle** (30 max, 26 used) — replaces `Track rental income & expenses`
+```
+Rentals & personal budgets
+```
+
+**Keywords** (100 max, 98 used) — adds `budget,savings,spending,household`;
+drops `schedule e,deduction` per the spec and `real estate` to fit the limit
+(Apple already indexes "rental"/"property" from the name and subtitle).
+```
+landlord,expense,income,tax,tracker,bookkeeping,profit,cash flow,budget,savings,spending,household
+```
+
+**Description** — new first paragraph, replacing the current opening paragraph;
+the rest of the description stays as is.
+```
+PropertyLedger keeps the books for your rental properties — and, if you like,
+for your own household too. Each ledger is either a rental property or a
+personal budget: rentals get income, expenses, and a profit-and-loss picture
+you can actually read; budgets get the same fast entry, monthly totals, and a
+savings rate. No spreadsheet, no subscription to accounting software built for
+something else.
+```
+
+**What's New (1.2)**
+```
+Personal budgets. Alongside your rental properties you can now keep a household budget — same quick entry, recurring bills, and reports, with a This Month view and your savings rate. Categories are tailored to each ledger: landlord categories for rentals, everyday ones for budgets.
+```
+
+**Screenshots** — add one shot as screenshot 7: the **Household** budget
+dashboard from the demo account (`demo.reviewer@…`), which is seeded with a
+personal ledger named "Household" (salary, groceries, dining out, fuel,
+subscriptions, phone, rent across the current and previous month). Take it at
+release time so the month totals match the release month.
+
+---
+
 ## URLs
 
 | Field | Value |

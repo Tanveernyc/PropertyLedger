@@ -126,3 +126,7 @@ create policy "own recurring" on recurring_rules for all
 -- Months the user deleted from a rule; the generator treats them as already present.
 alter table recurring_rules
   add column if not exists skipped_months date[] not null default '{}';
+
+-- Phase 15b: vendor/source template on recurring rules.
+alter table recurring_rules
+  add column if not exists party text;

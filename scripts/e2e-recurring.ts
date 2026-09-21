@@ -13,11 +13,13 @@
 // (the demo account's seeded screenshot data is never touched). Exits 1 on any failure.
 import { supabase } from '../src/db/supabase';
 import {
+  applyRuleToPostedEntries,
   createRecurringRule,
   deleteRecurringRule,
   getRecurringRule,
   skipRecurringMonth,
   syncRule,
+  updateRecurringRule,
 } from '../src/db/recurring';
 import { deleteExpense, getExpense, listExpensesForRule, updateExpense } from '../src/db/expenses';
 import type { Expense } from '../src/types';
@@ -132,6 +134,23 @@ async function main(): Promise<void> {
       'c. edited row survives sync',
       insertedC === 0 && rows.length === 3 && Number(febAfter?.amount) === 700 && febAfter?.is_edited === true,
       `inserted ${insertedC}; rows: ${summarize(rows)} (* = is_edited)`
+    );
+
+    // c2. change the rule (amount + vendor) and apply to posted months from Feb →
+    //     Jan untouched, Feb untouched (is_edited), Mar rewritten
+    const changed = await updateRecurringRule(rule.id, { amount: 650, party: 'e2e Bank' });
+    const rewritten = await applyRuleToPostedEntries(changed, '2026-02-01');
+    rows = await listExpensesForRule(rule.id);
+    const jan = rows.find((r) => r.paid_on === '2026-01-01');
+    const febKept = rows.find((r) => r.paid_on === '2026-02-01');
+    const marNew = rows.find((r) => r.paid_on === '2026-03-01');
+    check(
+      'c2. apply rule to posted months respects is_edited and from-month',
+      rewritten === 1 &&
+        Number(jan?.amount) === 611.83 && jan?.vendor === null &&
+        Number(febKept?.amount) === 700 &&
+        Number(marNew?.amount) === 650 && marNew?.vendor === 'e2e Bank',
+      `rewritten ${rewritten}; jan=${jan?.amount}/${jan?.vendor} feb=${febKept?.amount} mar=${marNew?.amount}/${marNew?.vendor}`
     );
 
     // d. skip March + delete the March row → sync → still 2, March not re-posted

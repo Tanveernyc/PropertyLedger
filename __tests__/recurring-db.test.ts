@@ -7,8 +7,10 @@ import { supabase } from '../src/db/supabase';
 import { createExpenses, listExpensesForRule } from '../src/db/expenses';
 import { createIncomes } from '../src/db/income';
 import {
+  applyRuleToPostedEntries,
   createRecurringRule,
   skipRecurringMonth,
+  updateRecurringRule,
   stopRecurringRule,
   syncRecurringEntries,
   syncRule,
@@ -23,7 +25,7 @@ function createBuilder(result: { data: unknown; error: unknown }) {
   const calls: Array<{ method: string; args: unknown[] }> = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const builder: any = { calls };
-  for (const method of ['select', 'insert', 'update', 'delete', 'eq', 'is', 'order', 'single']) {
+  for (const method of ['select', 'insert', 'update', 'delete', 'eq', 'gte', 'is', 'order', 'single']) {
     builder[method] = (...args: unknown[]) => {
       calls.push({ method, args });
       return builder;
@@ -35,7 +37,7 @@ function createBuilder(result: { data: unknown; error: unknown }) {
 
 const baseRule: RecurringRule = {
   id: 'r1', user_id: 'u1', property_id: 'p1', category_id: 'c1', kind: 'expense',
-  amount: 1500, notes: null, start_month: '2026-01-01', end_mode: 'until_stopped',
+  amount: 1500, notes: null, party: null, start_month: '2026-01-01', end_mode: 'until_stopped',
   occurrences: null, stopped_on: null, is_active: true, created_at: '2026-01-01T00:00:00Z',
   skipped_months: [],
 };
@@ -124,8 +126,8 @@ describe('syncRule', () => {
     expect(inserted).toBe(2);
     const insert = insertBuilder.calls.find((c: { method: string }) => c.method === 'insert');
     expect(insert.args[0]).toEqual([
-      { property_id: 'p1', category_id: 'c1', amount: 1500, notes: null, paid_on: '2026-02-01', recurring_id: 'r1', is_edited: false, user_id: 'u1' },
-      { property_id: 'p1', category_id: 'c1', amount: 1500, notes: null, paid_on: '2026-03-01', recurring_id: 'r1', is_edited: false, user_id: 'u1' },
+      { property_id: 'p1', category_id: 'c1', amount: 1500, notes: null, vendor: null, paid_on: '2026-02-01', recurring_id: 'r1', is_edited: false, user_id: 'u1' },
+      { property_id: 'p1', category_id: 'c1', amount: 1500, notes: null, vendor: null, paid_on: '2026-03-01', recurring_id: 'r1', is_edited: false, user_id: 'u1' },
     ]);
   });
 
@@ -159,7 +161,7 @@ describe('syncRule', () => {
     expect(inserted).toBe(1);
     const insert = insertBuilder.calls.find((c: { method: string }) => c.method === 'insert');
     expect(insert.args[0]).toEqual([
-      { property_id: 'p1', category_id: 'c1', amount: 1500, notes: null, paid_on: '2026-03-01', recurring_id: 'r1', is_edited: false, user_id: 'u1' },
+      { property_id: 'p1', category_id: 'c1', amount: 1500, notes: null, vendor: null, paid_on: '2026-03-01', recurring_id: 'r1', is_edited: false, user_id: 'u1' },
     ]);
   });
 });
@@ -223,5 +225,73 @@ describe('skipRecurringMonth', () => {
     await skipRecurringMonth('r1', '2026-01-20');
 
     expect(mockFrom).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('syncRule copies party onto generated rows', () => {
+  it('expense rules write vendor', async () => {
+    const listBuilder = createBuilder({ data: [], error: null });
+    const insertBuilder = createBuilder({ data: [{ id: 'e1' }], error: null });
+    mockFrom.mockReturnValueOnce(listBuilder).mockReturnValueOnce(insertBuilder);
+    await syncRule({ ...baseRule, party: 'KeyBank', start_month: '2026-03-01' }, '2026-03-15');
+    const insert = insertBuilder.calls.find((c: { method: string }) => c.method === 'insert');
+    expect(insert.args[0][0]).toMatchObject({ vendor: 'KeyBank', paid_on: '2026-03-01' });
+  });
+
+  it('income rules write source', async () => {
+    const listBuilder = createBuilder({ data: [], error: null });
+    const insertBuilder = createBuilder({ data: [{ id: 'i1' }], error: null });
+    mockFrom.mockReturnValueOnce(listBuilder).mockReturnValueOnce(insertBuilder);
+    await syncRule({ ...baseRule, kind: 'income', party: 'J. Alvarez', start_month: '2026-03-01' }, '2026-03-15');
+    const insert = insertBuilder.calls.find((c: { method: string }) => c.method === 'insert');
+    expect(insert.args[0][0]).toMatchObject({ source: 'J. Alvarez', received_on: '2026-03-01' });
+  });
+});
+
+describe('updateRecurringRule', () => {
+  it('sends every editable field', async () => {
+    const builder = createBuilder({ data: baseRule, error: null });
+    mockFrom.mockReturnValue(builder);
+    await updateRecurringRule('r1', {
+      amount: 1600, notes: 'n', party: 'v', category_id: 'c2', property_id: 'p2',
+      start_month: '2026-02-01', end_mode: 'count', occurrences: 6,
+    });
+    expect(builder.calls).toContainEqual({
+      method: 'update',
+      args: [{ amount: 1600, notes: 'n', party: 'v', category_id: 'c2', property_id: 'p2', start_month: '2026-02-01', end_mode: 'count', occurrences: 6 }],
+    });
+    expect(builder.calls).toContainEqual({ method: 'eq', args: ['id', 'r1'] });
+  });
+});
+
+describe('applyRuleToPostedEntries', () => {
+  it('rewrites unedited expense rows from the given month onward, never edited ones', async () => {
+    const builder = createBuilder({ data: [{ id: 'e2' }, { id: 'e3' }], error: null });
+    mockFrom.mockReturnValue(builder);
+    const rule = { ...baseRule, amount: 1700, party: 'KeyBank', notes: 'new', category_id: 'c9' };
+    const n = await applyRuleToPostedEntries(rule, '2026-04-10');
+    expect(n).toBe(2);
+    expect(mockFrom).toHaveBeenCalledWith('expenses');
+    expect(builder.calls).toContainEqual({
+      method: 'update',
+      args: [{ amount: 1700, vendor: 'KeyBank', notes: 'new', category_id: 'c9' }],
+    });
+    expect(builder.calls).toContainEqual({ method: 'eq', args: ['recurring_id', 'r1'] });
+    expect(builder.calls).toContainEqual({ method: 'eq', args: ['is_edited', false] });
+    // Month boundary is normalised to the 1st.
+    expect(builder.calls).toContainEqual({ method: 'gte', args: ['paid_on', '2026-04-01'] });
+  });
+
+  it('uses the income table and source for income rules', async () => {
+    const builder = createBuilder({ data: [{ id: 'i1' }], error: null });
+    mockFrom.mockReturnValue(builder);
+    const n = await applyRuleToPostedEntries({ ...baseRule, kind: 'income', party: 'Tenant' }, '2026-01-01');
+    expect(n).toBe(1);
+    expect(mockFrom).toHaveBeenCalledWith('income');
+    expect(builder.calls).toContainEqual({
+      method: 'update',
+      args: [{ amount: 1500, source: 'Tenant', notes: null, category_id: 'c1' }],
+    });
+    expect(builder.calls).toContainEqual({ method: 'gte', args: ['received_on', '2026-01-01'] });
   });
 });

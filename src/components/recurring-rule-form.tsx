@@ -31,6 +31,7 @@ export function RecurringRuleForm({ kind, initialPropertyId, onSaved }: Props) {
   const [startMonthText, setStartMonthText] = useState(monthKey(todayISO()));
   const [endMode, setEndMode] = useState<EndMode>('until_stopped');
   const [occurrencesText, setOccurrencesText] = useState('12');
+  const [party, setParty] = useState('');
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<RecurringRuleValidation['errors']>({});
 
@@ -94,6 +95,7 @@ export function RecurringRuleForm({ kind, initialPropertyId, onSaved }: Props) {
         kind,
         amount: validation.amount,
         notes: notes.trim() || null,
+        party: party.trim() || null,
         start_month: validation.startMonth,
         end_mode: endMode,
         occurrences: endMode === 'count' ? validation.occurrences! : null,
@@ -205,6 +207,14 @@ export function RecurringRuleForm({ kind, initialPropertyId, onSaved }: Props) {
           {errors.occurrences ? <Text style={styles.error}>{errors.occurrences}</Text> : null}
         </>
       ) : null}
+
+      <Text style={styles.label}>{isExpense ? 'Vendor' : 'Source'}</Text>
+      <TextInput
+        style={styles.input}
+        value={party}
+        onChangeText={setParty}
+        placeholder={isExpense ? 'e.g. KeyBank' : 'e.g. tenant name'}
+      />
 
       <Text style={styles.label}>Notes</Text>
       <TextInput style={styles.input} value={notes} onChangeText={setNotes} placeholder="optional" />

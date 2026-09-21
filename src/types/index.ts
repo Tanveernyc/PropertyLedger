@@ -114,6 +114,8 @@ export interface RecurringRule {
   kind: CategoryKind;
   amount: number;
   notes: string | null;
+  /** Vendor (expense) or source (income) copied onto each generated entry. */
+  party: string | null;
   /** First day of the first month, e.g. '2026-01-01'. */
   start_month: string;
   end_mode: EndMode;
@@ -134,6 +136,7 @@ export interface NewRecurringRule {
   kind: CategoryKind;
   amount: number;
   notes?: string | null;
+  party?: string | null;
   start_month: string;
   end_mode: EndMode;
   occurrences?: number | null;

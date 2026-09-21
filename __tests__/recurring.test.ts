@@ -11,6 +11,7 @@ function rule(overrides: Partial<RecurringRule> = {}): RecurringRule {
     kind: 'expense',
     amount: 1500,
     notes: 'mortgage',
+    party: null,
     start_month: '2026-01-01',
     end_mode: 'until_stopped',
     occurrences: null,
@@ -85,7 +86,7 @@ describe('generateDueEntries', () => {
   });
 
   it('copies rule fields onto every generated entry', () => {
-    const [e] = generateDueEntries(rule({ kind: 'income', amount: 2150, notes: 'Unit A rent' }), [], '2026-01-15');
+    const [e] = generateDueEntries(rule({ kind: 'income', amount: 2150, notes: 'Unit A rent', party: 'J. Alvarez' }), [], '2026-01-15');
     expect(e).toEqual({
       recurring_id: 'r1',
       property_id: 'p1',
@@ -93,6 +94,7 @@ describe('generateDueEntries', () => {
       kind: 'income',
       amount: 2150,
       notes: 'Unit A rent',
+      party: 'J. Alvarez',
       date: '2026-01-01',
     });
   });

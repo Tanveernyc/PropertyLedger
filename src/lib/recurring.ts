@@ -13,6 +13,8 @@ export interface GeneratedEntry {
   kind: CategoryKind;
   amount: number;
   notes: string | null;
+  /** Vendor for expenses, source for income. */
+  party: string | null;
   /** First day of the month this entry represents (paid_on / received_on). */
   date: string;
 }
@@ -52,6 +54,7 @@ export function generateDueEntries(
       kind: rule.kind,
       amount: rule.amount,
       notes: rule.notes,
+      party: rule.party,
       date: month,
     });
   }

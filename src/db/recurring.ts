@@ -38,11 +38,16 @@ export async function getRecurringRule(id: string): Promise<RecurringRule> {
   return data as RecurringRule;
 }
 
-/** Amount/notes only — affects months not yet generated (README §4.3). */
-export async function updateRecurringRule(
-  id: string,
-  patch: Pick<Partial<NewRecurringRule>, 'amount' | 'notes'>
-): Promise<RecurringRule> {
+/** Fields a user may change on a rule. Affects months not yet generated (README §4.3)
+ *  unless the caller also runs applyRuleToPostedEntries. */
+export type RecurringRulePatch = Partial<
+  Pick<
+    NewRecurringRule,
+    'amount' | 'notes' | 'party' | 'category_id' | 'property_id' | 'start_month' | 'end_mode' | 'occurrences'
+  >
+>;
+
+export async function updateRecurringRule(id: string, patch: RecurringRulePatch): Promise<RecurringRule> {
   const { data, error } = await supabase
     .from('recurring_rules')
     .update(patch)
@@ -105,6 +110,7 @@ export async function syncRule(rule: RecurringRule, today: string = todayISO()):
         category_id: d.category_id,
         amount: d.amount,
         notes: d.notes,
+        vendor: d.party,
         paid_on: d.date,
         recurring_id: d.recurring_id,
         is_edited: false,
@@ -124,6 +130,7 @@ export async function syncRule(rule: RecurringRule, today: string = todayISO()):
       category_id: d.category_id,
       amount: d.amount,
       notes: d.notes,
+      source: d.party,
       received_on: d.date,
       recurring_id: d.recurring_id,
       is_edited: false,
@@ -146,4 +153,29 @@ export async function syncRecurringEntries(today: string = todayISO()): Promise<
     }
   }
   return total;
+}
+
+/**
+ * Pushes the rule's current amount / vendor-or-source / notes / category onto the
+ * entries it already generated, from `fromDate`'s month onward. Rows the user
+ * edited by hand (is_edited) are never touched. Property is deliberately not
+ * moved: relocating posted history is a different operation. Returns rows updated.
+ */
+export async function applyRuleToPostedEntries(rule: RecurringRule, fromDate: string): Promise<number> {
+  const fromMonth = firstOfMonth(fromDate);
+  const table = rule.kind === 'expense' ? 'expenses' : 'income';
+  const dateColumn = rule.kind === 'expense' ? 'paid_on' : 'received_on';
+  const patch =
+    rule.kind === 'expense'
+      ? { amount: rule.amount, vendor: rule.party, notes: rule.notes, category_id: rule.category_id }
+      : { amount: rule.amount, source: rule.party, notes: rule.notes, category_id: rule.category_id };
+  const { data, error } = await supabase
+    .from(table)
+    .update(patch)
+    .eq('recurring_id', rule.id)
+    .eq('is_edited', false)
+    .gte(dateColumn, fromMonth)
+    .select('id');
+  if (error) throw error;
+  return (data ?? []).length;
 }

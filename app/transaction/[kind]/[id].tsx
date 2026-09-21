@@ -15,9 +15,11 @@ import {
 } from 'react-native';
 import { getExpense, updateExpense } from '@/db/expenses';
 import { getIncome, updateIncome } from '@/db/income';
+import { getProperty } from '@/db/properties';
 import { skipRecurringMonth } from '@/db/recurring';
 import { monthKey } from '@/lib/dates';
 import { validateTransactionForm, type TransactionValidation } from '@/lib/expense-validation';
+import { partyLabel } from '@/lib/ledger-copy';
 import type { Expense, Income } from '@/types';
 import { money, type, ui } from '@/theme';
 
@@ -30,6 +32,12 @@ export default function EditTransactionScreen() {
     queryKey: [isExpense ? 'expense' : 'income-entry', id],
     queryFn: () => (isExpense ? getExpense(id) : getIncome(id)),
   });
+  const { data: property } = useQuery({
+    queryKey: ['property', transaction?.property_id],
+    queryFn: () => getProperty(transaction!.property_id),
+    enabled: !!transaction,
+  });
+  const ledgerKind = property?.property_type;
 
   const [amountText, setAmountText] = useState('');
   const [date, setDate] = useState('');
@@ -63,8 +71,8 @@ export default function EditTransactionScreen() {
         // Property/category are not edited here; pass placeholders that satisfy the validator.
         propertyId: transaction?.property_id ?? null,
         categoryId: transaction?.category_id ?? null,
-        periodStart: isExpense ? periodStart : undefined,
-        periodEnd: isExpense ? periodEnd : undefined,
+        periodStart: isExpense && ledgerKind !== 'personal' ? periodStart : undefined,
+        periodEnd: isExpense && ledgerKind !== 'personal' ? periodEnd : undefined,
       });
       setErrors(validation.errors);
       if (!validation.valid || validation.amount === undefined) {
@@ -146,7 +154,7 @@ export default function EditTransactionScreen() {
       />
       {errors.date ? <Text style={styles.error}>{errors.date}</Text> : null}
 
-      {isExpense ? (
+      {isExpense && ledgerKind !== 'personal' ? (
         <>
           <Text style={styles.label}>Covers period (optional)</Text>
           <View style={styles.periodRow}>
@@ -169,7 +177,7 @@ export default function EditTransactionScreen() {
         </>
       ) : null}
 
-      <Text style={styles.label}>{isExpense ? 'Vendor' : 'Source'}</Text>
+      <Text style={styles.label}>{partyLabel(ledgerKind ?? 'rental', kind)}</Text>
       <TextInput style={styles.input} value={party} onChangeText={setParty} />
 
       <Text style={styles.label}>Notes</Text>

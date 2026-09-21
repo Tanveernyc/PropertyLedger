@@ -21,6 +21,7 @@ import { listProperties } from '@/db/properties';
 import { applyRuleToPostedEntries, getRecurringRule, syncRule, updateRecurringRule } from '@/db/recurring';
 import { orderCategoriesByRecent } from '@/lib/add-transaction-state';
 import { isValidISODate, monthKey, todayISO } from '@/lib/dates';
+import { collectionNoun, kindsOf, partyLabel } from '@/lib/ledger-copy';
 import { validateRecurringRuleForm, type RecurringRuleValidation } from '@/lib/recurring-rule-validation';
 import type { EndMode } from '@/types';
 import { colors, money, type, ui } from '@/theme';
@@ -65,7 +66,14 @@ export default function EditRecurringRuleScreen() {
   }, [rule]);
 
   const isExpense = rule?.kind === 'expense';
-  const kindCategories = orderCategoriesByRecent(categories ?? [], [], rule?.kind ?? 'expense');
+  const selectedLedger = (properties ?? []).find((p) => p.id === propertyId);
+  const ledgerKind = selectedLedger?.property_type;
+  const kindCategories = orderCategoriesByRecent(categories ?? [], [], rule?.kind ?? 'expense', ledgerKind);
+
+  // Category selection tracks the selected ledger's scope; drop it if it no longer applies.
+  useEffect(() => {
+    if (categoryId && !kindCategories.some((c) => c.id === categoryId)) setCategoryId(null);
+  }, [propertyId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -135,7 +143,7 @@ export default function EditRecurringRuleScreen() {
         ledger too, turn on the switch at the bottom.
       </Text>
 
-      <Text style={styles.label}>Property *</Text>
+      <Text style={styles.label}>{collectionNoun(kindsOf(properties ?? []))} *</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow} style={styles.chipStrip}>
         {(properties ?? []).map((p) => (
           <Chip key={p.id} label={p.name} active={propertyId === p.id} onPress={() => setPropertyId(p.id)} />
@@ -160,12 +168,18 @@ export default function EditRecurringRuleScreen() {
       />
       {errors.amount ? <Text style={styles.error}>{errors.amount}</Text> : null}
 
-      <Text style={styles.label}>{isExpense ? 'Vendor' : 'Source'}</Text>
+      <Text style={styles.label}>{partyLabel(ledgerKind ?? 'rental', rule?.kind ?? 'expense')}</Text>
       <TextInput
         style={styles.input}
         value={party}
         onChangeText={setParty}
-        placeholder={isExpense ? 'e.g. KeyBank' : 'e.g. tenant name'}
+        placeholder={
+          isExpense
+            ? ledgerKind === 'personal'
+              ? "e.g. Trader Joe's"
+              : 'e.g. Allstate'
+            : 'e.g. tenant name'
+        }
       />
 
       <Text style={styles.label}>Notes</Text>

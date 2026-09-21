@@ -9,6 +9,7 @@ import { listProperties } from '@/db/properties';
 import { createRecurringRule, syncRule } from '@/db/recurring';
 import { orderCategoriesByRecent } from '@/lib/add-transaction-state';
 import { isValidISODate, monthKey, todayISO } from '@/lib/dates';
+import { collectionNoun, kindsOf, partyLabel } from '@/lib/ledger-copy';
 import {
   monthsToBackfill,
   validateRecurringRuleForm,
@@ -42,12 +43,19 @@ export function RecurringRuleForm({ kind, initialPropertyId, onSaved }: Props) {
     queryFn: () => listProperties(),
   });
   const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: listCategories });
-  const kindCategories = orderCategoriesByRecent(categories ?? [], [], kind);
+  const selectedLedger = (properties ?? []).find((p) => p.id === propertyId);
+  const ledgerKind = selectedLedger?.property_type;
+  const kindCategories = orderCategoriesByRecent(categories ?? [], [], kind, ledgerKind);
 
   // Default to the only/first property when none was passed in.
   useEffect(() => {
     if (!propertyId && properties?.length) setPropertyId(properties[0].id);
   }, [properties, propertyId]);
+
+  // Category selection tracks the selected ledger's scope; drop it if it no longer applies.
+  useEffect(() => {
+    if (categoryId && !kindCategories.some((c) => c.id === categoryId)) setCategoryId(null);
+  }, [propertyId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Live preview of how many months will post immediately (finding 4) — independent of
   // full form validation so it updates as soon as the start month looks parseable.
@@ -141,7 +149,7 @@ export function RecurringRuleForm({ kind, initialPropertyId, onSaved }: Props) {
         past months up to today. You can edit or delete any single month afterwards.
       </Text>
 
-      <Text style={styles.label}>Property *</Text>
+      <Text style={styles.label}>{collectionNoun(kindsOf(properties ?? []))} *</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow} style={styles.chipStrip}>
         {(properties ?? []).map((p) => (
           <Chip key={p.id} label={p.name} active={propertyId === p.id} onPress={() => setPropertyId(p.id)} />
@@ -208,12 +216,18 @@ export function RecurringRuleForm({ kind, initialPropertyId, onSaved }: Props) {
         </>
       ) : null}
 
-      <Text style={styles.label}>{isExpense ? 'Vendor' : 'Source'}</Text>
+      <Text style={styles.label}>{partyLabel(ledgerKind ?? 'rental', kind)}</Text>
       <TextInput
         style={styles.input}
         value={party}
         onChangeText={setParty}
-        placeholder={isExpense ? 'e.g. KeyBank' : 'e.g. tenant name'}
+        placeholder={
+          isExpense
+            ? ledgerKind === 'personal'
+              ? "e.g. Trader Joe's"
+              : 'e.g. Allstate'
+            : 'e.g. tenant name'
+        }
       />
 
       <Text style={styles.label}>Notes</Text>

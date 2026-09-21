@@ -71,9 +71,12 @@ export default function EditRecurringRuleScreen() {
   const kindCategories = orderCategoriesByRecent(categories ?? [], [], rule?.kind ?? 'expense', ledgerKind);
 
   // Category selection tracks the selected ledger's scope; drop it if it no longer applies.
+  // Guarded until both lists load, so the rule's prefilled category isn't nulled by an
+  // empty kindCategories before properties/categories have arrived.
   useEffect(() => {
+    if (!properties || !categories) return;
     if (categoryId && !kindCategories.some((c) => c.id === categoryId)) setCategoryId(null);
-  }, [propertyId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [propertyId, properties, categories]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -177,7 +180,7 @@ export default function EditRecurringRuleScreen() {
           isExpense
             ? ledgerKind === 'personal'
               ? "e.g. Trader Joe's"
-              : 'e.g. Allstate'
+              : 'e.g. KeyBank'
             : 'e.g. tenant name'
         }
       />
@@ -230,7 +233,7 @@ export default function EditRecurringRuleScreen() {
           <View style={styles.applyText}>
             <Text style={styles.applyTitle}>Also update months already posted</Text>
             <Text style={styles.applyHint}>
-              Rewrites this rule's posted entries with the new amount, {isExpense ? 'vendor' : 'source'},
+              Rewrites this rule's posted entries with the new amount, {partyLabel(ledgerKind ?? 'rental', rule.kind).toLowerCase()},
               category and notes. Months you edited by hand are left alone.
             </Text>
           </View>

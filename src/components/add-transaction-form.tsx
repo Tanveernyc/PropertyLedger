@@ -71,8 +71,9 @@ export function AddTransactionForm({ kind }: { kind: CategoryKind }) {
 
   // Category selection tracks the selected ledger's scope; drop it if it no longer applies.
   useEffect(() => {
+    if (!properties || !categories) return;
     if (state.categoryId && !kindCategories.some((c) => c.id === state.categoryId)) set({ categoryId: null });
-  }, [state.propertyId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [state.propertyId, properties, categories]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isPersonal = ledgerKind === 'personal';
 

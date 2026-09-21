@@ -54,8 +54,9 @@ export function RecurringRuleForm({ kind, initialPropertyId, onSaved }: Props) {
 
   // Category selection tracks the selected ledger's scope; drop it if it no longer applies.
   useEffect(() => {
+    if (!properties || !categories) return;
     if (categoryId && !kindCategories.some((c) => c.id === categoryId)) setCategoryId(null);
-  }, [propertyId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [propertyId, properties, categories]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Live preview of how many months will post immediately (finding 4) — independent of
   // full form validation so it updates as soon as the start month looks parseable.
@@ -225,7 +226,7 @@ export function RecurringRuleForm({ kind, initialPropertyId, onSaved }: Props) {
           isExpense
             ? ledgerKind === 'personal'
               ? "e.g. Trader Joe's"
-              : 'e.g. Allstate'
+              : 'e.g. KeyBank'
             : 'e.g. tenant name'
         }
       />

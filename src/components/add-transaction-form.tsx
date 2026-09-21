@@ -15,7 +15,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { listCategories } from '@/db/categories';
+import { createCategory, listCategories } from '@/db/categories';
 import { createExpense } from '@/db/expenses';
 import { createIncome } from '@/db/income';
 import { listProperties } from '@/db/properties';
@@ -121,6 +121,23 @@ export function AddTransactionForm({ kind }: { kind: CategoryKind }) {
 
   const set = (patch: Partial<AddTransactionState>) => setState((s) => ({ ...s, ...patch }));
 
+  // Create a category without leaving the form; the new one is selected right away.
+  const newCategoryMutation = useMutation({
+    mutationFn: (name: string) => createCategory(name, kind),
+    onSuccess: (category) => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      set({ categoryId: category.id });
+    },
+    onError: (e: Error) => Alert.alert('Could not add category', e.message),
+  });
+  const promptNewCategory = () => {
+    // Alert.prompt is iOS-only; this app is iOS-first (same convention as the Categories screen).
+    Alert.prompt(`New ${kind} category`, undefined, (name) => {
+      const trimmed = name?.trim() ?? '';
+      if (trimmed) newCategoryMutation.mutate(trimmed);
+    });
+  };
+
   return (
     <ScrollView
       contentContainerStyle={styles.container}
@@ -144,6 +161,7 @@ export function AddTransactionForm({ kind }: { kind: CategoryKind }) {
 
       <Text style={styles.label}>Category * (recent first)</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+        <Chip label="+ New" active={false} onPress={promptNewCategory} />
         {kindCategories.map((c) => (
           <Chip
             key={c.id}

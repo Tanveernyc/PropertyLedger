@@ -36,6 +36,7 @@ function RootNavigator() {
         <Stack.Screen name="export" options={{ title: 'Export' }} />
         <Stack.Screen name="delete-account" options={{ title: 'Delete Account' }} />
         <Stack.Screen name="recurring/new" options={{ title: 'Recurring', presentation: 'modal' }} />
+        <Stack.Screen name="recurring/[id]" options={{ title: 'Edit Rule', presentation: 'modal' }} />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)/sign-in" options={{ headerShown: false }} />

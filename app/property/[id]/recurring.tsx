@@ -1,5 +1,6 @@
 // Per-property recurring rules: active and stopped, with Stop (README §4.4) and
-// Delete (history kept via on delete set null). New rule → /recurring/new modal.
+// Delete (history kept via on delete set null). Edit → /recurring/[id] (amount/notes,
+// README §4.3). New rule → /recurring/new modal.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, Stack, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -85,6 +86,11 @@ export default function PropertyRecurringScreen() {
                 </Text>
               </View>
               <View style={styles.actions}>
+                {item.is_active ? (
+                  <Link href={{ pathname: '/recurring/[id]', params: { id: item.id } }} style={styles.edit}>
+                    Edit
+                  </Link>
+                ) : null}
                 {item.is_active && item.end_mode === 'until_stopped' ? (
                   <Pressable onPress={() => onStop(item)}>
                     <Text style={styles.stop}>Stop</Text>
@@ -121,6 +127,7 @@ const styles = StyleSheet.create({
   rowTitle: { fontSize: 15, fontWeight: '600' },
   rowMeta: { fontSize: 13, color: '#777', marginTop: 2 },
   actions: { flexDirection: 'row', gap: 14 },
+  edit: { color: '#2563eb', fontSize: 14 },
   stop: { color: '#b45309', fontSize: 14 },
   delete: { color: '#dc2626', fontSize: 14 },
 });

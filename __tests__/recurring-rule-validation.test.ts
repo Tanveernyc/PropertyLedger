@@ -1,5 +1,5 @@
 // Phase 15 tests — new recurring rule form validation.
-import { monthsToBackfill, validateRecurringRuleForm } from '../src/lib/recurring-rule-validation';
+import { monthsToBackfill, validateRecurringRuleForm, validateRuleAmount } from '../src/lib/recurring-rule-validation';
 
 const valid = {
   propertyId: 'p1',
@@ -71,5 +71,17 @@ describe('monthsToBackfill', () => {
 
   it('handles a far-past start across years', () => {
     expect(monthsToBackfill('2016-01-01', '2026-09-18')).toBe(129);
+  });
+});
+
+describe('validateRuleAmount', () => {
+  it('returns the parsed amount for valid input', () => {
+    expect(validateRuleAmount('1700')).toEqual({ amount: 1700 });
+    expect(validateRuleAmount(' 1692.21 ')).toEqual({ amount: 1692.21 });
+  });
+  it('returns an error for zero, negative, non-numeric, or 3-decimal input', () => {
+    for (const text of ['0', '-5', 'abc', '1.234', '']) {
+      expect(validateRuleAmount(text).error).toBeDefined();
+    }
   });
 });

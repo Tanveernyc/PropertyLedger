@@ -74,3 +74,12 @@ export function monthsToBackfill(startMonth: string, today: string): number {
   const diff = (curYear * 12 + curMonthNum) - (startYear * 12 + startMonthNum) + 1;
   return diff > 0 ? diff : 0;
 }
+
+/** Edit-rule form: only the monthly amount is validated (README §4.3 — future months only). */
+export function validateRuleAmount(amountText: string): { amount?: number; error?: string } {
+  const amount = parseAmountInput(amountText);
+  if (amount === undefined) {
+    return { error: 'Amount must be a positive number with at most 2 decimal places.' };
+  }
+  return { amount };
+}

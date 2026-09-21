@@ -6,6 +6,7 @@ import { PropertyForm } from '@/components/property-form';
 import { getProperty, setPropertyArchived, updateProperty } from '@/db/properties';
 import type { NewProperty } from '@/types';
 import { colors, ui } from '@/theme';
+import { nounFor } from '@/lib/ledger-copy';
 
 export default function EditPropertyScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -72,7 +73,7 @@ export default function EditPropertyScreen() {
       />
       <Pressable style={styles.archiveButton} onPress={toggleArchive}>
         <Text style={styles.archiveText}>
-          {property.is_archived ? 'Unarchive Property' : 'Archive Property'}
+          {property.is_archived ? 'Unarchive' : 'Archive'} {nounFor(property.property_type).one}
         </Text>
       </Pressable>
     </View>

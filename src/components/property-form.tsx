@@ -6,10 +6,10 @@ import type { NewProperty, Property, PropertyType } from '@/types';
 import { ui } from '@/theme';
 import {
   parsePriceInput,
-  PROPERTY_TYPES,
   validateProperty,
   type PropertyValidation,
 } from '@/lib/property-validation';
+import { nounFor } from '@/lib/ledger-copy';
 
 interface Props {
   /** Existing property when editing; undefined when creating. */
@@ -33,20 +33,22 @@ export function PropertyForm({ initial, onSubmit, submitting, submitLabel }: Pro
   const [notes, setNotes] = useState(initial?.notes ?? '');
   const [errors, setErrors] = useState<PropertyValidation['errors'] & { price?: string }>({});
 
+  const isRental = propertyType === 'rental';
+
   const submit = () => {
     const validation = validateProperty({ name, property_type: propertyType });
     const price = parsePriceInput(priceText);
     const nextErrors: typeof errors = { ...validation.errors };
-    if (price === undefined) nextErrors.price = 'Price must be a positive number.';
+    if (isRental && price === undefined) nextErrors.price = 'Price must be a positive number.';
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
     onSubmit({
       name: name.trim(),
       property_type: propertyType,
-      address: address.trim() || null,
-      purchase_date: purchaseDate.trim() || null,
-      purchase_price: price ?? null,
+      address: isRental ? address.trim() || null : null,
+      purchase_date: isRental ? purchaseDate.trim() || null : null,
+      purchase_price: isRental ? price ?? null : null,
       notes: notes.trim() || null,
     });
   };
@@ -59,58 +61,65 @@ export function PropertyForm({ initial, onSubmit, submitting, submitLabel }: Pro
       automaticallyAdjustKeyboardInsets
       keyboardDismissMode="interactive"
     >
-      <Text style={styles.label}>Name *</Text>
-      <TextInput
-        style={styles.input}
-        value={name}
-        onChangeText={setName}
-        placeholder="e.g. 12 Maple St"
-        accessibilityLabel="Property name"
-      />
-      {errors.name ? <Text style={styles.error}>{errors.name}</Text> : null}
-
-      <Text style={styles.label}>Type *</Text>
+      <Text style={styles.label}>What is this ledger for? *</Text>
       <ScrollView horizontal contentContainerStyle={styles.typeRow}>
-        {PROPERTY_TYPES.map((type) => (
+        {(
+          [
+            ['rental', 'Rental property'],
+            ['personal', 'Personal budget'],
+          ] as const
+        ).map(([type, label]) => (
           <Pressable
             key={type}
             style={[styles.typeChip, propertyType === type && styles.typeChipActive]}
             onPress={() => setPropertyType(type)}
           >
-            <Text style={propertyType === type ? styles.typeChipTextActive : styles.typeChipText}>
-              {type}
-            </Text>
+            <Text style={propertyType === type ? styles.typeChipTextActive : styles.typeChipText}>{label}</Text>
           </Pressable>
         ))}
       </ScrollView>
       {errors.property_type ? <Text style={styles.error}>{errors.property_type}</Text> : null}
 
-      <Text style={styles.label}>Address</Text>
+      <Text style={styles.label}>Name *</Text>
       <TextInput
         style={styles.input}
-        value={address}
-        onChangeText={setAddress}
-        placeholder="Street, city, state"
+        value={name}
+        onChangeText={setName}
+        placeholder={propertyType === 'personal' ? 'e.g. Household' : 'e.g. 12 Maple St'}
+        accessibilityLabel={`${nounFor(propertyType).one} name`}
       />
+      {errors.name ? <Text style={styles.error}>{errors.name}</Text> : null}
 
-      <Text style={styles.label}>Purchase date</Text>
-      <TextInput
-        style={styles.input}
-        value={purchaseDate}
-        onChangeText={setPurchaseDate}
-        placeholder="YYYY-MM-DD"
-        autoCapitalize="none"
-      />
+      {isRental ? (
+        <>
+          <Text style={styles.label}>Address</Text>
+          <TextInput
+            style={styles.input}
+            value={address}
+            onChangeText={setAddress}
+            placeholder="Street, city, state"
+          />
 
-      <Text style={styles.label}>Purchase price ($)</Text>
-      <TextInput
-        style={styles.input}
-        value={priceText}
-        onChangeText={setPriceText}
-        placeholder="e.g. 250000"
-        keyboardType="decimal-pad"
-      />
-      {errors.price ? <Text style={styles.error}>{errors.price}</Text> : null}
+          <Text style={styles.label}>Purchase date</Text>
+          <TextInput
+            style={styles.input}
+            value={purchaseDate}
+            onChangeText={setPurchaseDate}
+            placeholder="YYYY-MM-DD"
+            autoCapitalize="none"
+          />
+
+          <Text style={styles.label}>Purchase price ($)</Text>
+          <TextInput
+            style={styles.input}
+            value={priceText}
+            onChangeText={setPriceText}
+            placeholder="e.g. 250000"
+            keyboardType="decimal-pad"
+          />
+          {errors.price ? <Text style={styles.error}>{errors.price}</Text> : null}
+        </>
+      ) : null}
 
       <Text style={styles.label}>Notes</Text>
       <TextInput

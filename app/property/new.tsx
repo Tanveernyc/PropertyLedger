@@ -22,7 +22,7 @@ export default function NewPropertyScreen() {
     <PropertyForm
       onSubmit={(values) => mutation.mutate(values)}
       submitting={mutation.isPending}
-      submitLabel="Create Property"
+      submitLabel="Create"
     />
   );
 }

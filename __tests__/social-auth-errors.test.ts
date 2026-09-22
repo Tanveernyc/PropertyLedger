@@ -10,6 +10,8 @@ describe('classifyProviderError', () => {
   it('treats a Google cancellation as cancelled', () => {
     expect(classifyProviderError({ code: 'SIGN_IN_CANCELLED' })).toEqual({ kind: 'cancelled' });
     expect(classifyProviderError({ code: '-5' })).toEqual({ kind: 'cancelled' });
+    // The SDK sometimes hands -5 back as a number, not a string.
+    expect(classifyProviderError({ code: -5 })).toEqual({ kind: 'cancelled' });
   });
 
   it('passes a real error message through', () => {

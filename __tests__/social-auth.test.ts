@@ -4,6 +4,7 @@ jest.mock('../src/db/supabase', () => ({
   supabase: { auth: { signInWithIdToken: jest.fn(), updateUser: jest.fn() } },
 }));
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { supabase } from '../src/db/supabase';
@@ -13,9 +14,11 @@ const mockSignInWithIdToken = supabase.auth.signInWithIdToken as jest.Mock;
 const mockUpdateUser = supabase.auth.updateUser as jest.Mock;
 const mockAppleSignIn = AppleAuthentication.signInAsync as jest.Mock;
 const mockGoogleSignIn = GoogleSignin.signIn as jest.Mock;
+const PENDING_KEY = 'pending-apple-full-name';
 
-beforeEach(() => {
+beforeEach(async () => {
   jest.clearAllMocks();
+  await AsyncStorage.clear();
   mockSignInWithIdToken.mockResolvedValue({ data: { session: {} }, error: null });
   mockUpdateUser.mockResolvedValue({ data: {}, error: null });
 });
@@ -54,6 +57,41 @@ describe('signInWithApple', () => {
     mockUpdateUser.mockRejectedValue(new Error('offline'));
 
     await expect(signInWithApple()).resolves.toEqual({ ok: true });
+  });
+
+  it('still signs in when updateUser RESOLVES an error instead of throwing', async () => {
+    mockAppleSignIn.mockResolvedValue({
+      identityToken: 'apple-token',
+      fullName: { givenName: 'Ada', familyName: 'Lovelace' },
+    });
+    mockUpdateUser.mockResolvedValue({ data: {}, error: { message: 'nope' } });
+
+    await expect(signInWithApple()).resolves.toEqual({ ok: true });
+  });
+
+  it('parks the one-shot name when the token exchange fails', async () => {
+    mockAppleSignIn.mockResolvedValue({
+      identityToken: 'apple-token',
+      fullName: { givenName: 'Ada', familyName: 'Lovelace' },
+    });
+    mockSignInWithIdToken.mockResolvedValue({ data: {}, error: { message: 'provider disabled' } });
+
+    const result = await signInWithApple();
+
+    expect(result).toEqual({ ok: false, outcome: { kind: 'error', message: 'provider disabled' } });
+    await expect(AsyncStorage.getItem(PENDING_KEY)).resolves.toBe('Ada Lovelace');
+    expect(mockUpdateUser).not.toHaveBeenCalled();
+  });
+
+  it('uses the parked name on a later sign-in where Apple sends none, then clears it', async () => {
+    await AsyncStorage.setItem(PENDING_KEY, 'Ada Lovelace');
+    mockAppleSignIn.mockResolvedValue({ identityToken: 'apple-token', fullName: null });
+
+    const result = await signInWithApple();
+
+    expect(result).toEqual({ ok: true });
+    expect(mockUpdateUser).toHaveBeenCalledWith({ data: { full_name: 'Ada Lovelace' } });
+    await expect(AsyncStorage.getItem(PENDING_KEY)).resolves.toBeNull();
   });
 
   it('reports a missing identity token instead of passing null on', async () => {

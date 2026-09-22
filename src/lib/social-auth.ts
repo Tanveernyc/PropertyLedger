@@ -1,5 +1,6 @@
 // The only place the Apple and Google SDKs are touched. Everything above this
 // module deals in SocialResult: a session exists, or here is why it does not.
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { supabase } from '@/db/supabase';
@@ -8,10 +9,24 @@ import { classifyProviderError, type ProviderOutcome } from './social-auth-error
 
 export type SocialResult = { ok: true } | { ok: false; outcome: ProviderOutcome };
 
+// babel-preset-expo inlines every EXPO_PUBLIC_* read at build time, so these are
+// compile-time constants baked into the bundle, not runtime lookups. Reading
+// them inside each function would therefore be no more dynamic than reading
+// them once here — changing one always requires a rebuild either way.
 const IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 
-/** Called once at app start. Safe to call when the ids are missing — the button hides instead. */
+// Apple hands out the user's name exactly once, on the first authorization. If
+// the token exchange fails that name is gone forever, so park it here and use
+// it on the next successful Apple sign-in.
+const PENDING_APPLE_NAME_KEY = 'pending-apple-full-name';
+
+/**
+ * Called from the sign-in screen's effect, not at app start — the screen is the
+ * only place Google sign-in can begin. `GoogleSignin.configure` is idempotent,
+ * so re-running it on every mount is free. Safe to call when the ids are
+ * missing: it no-ops and the button hides instead.
+ */
 export function configureGoogleSignIn(): void {
   if (!isGoogleSignInConfigured()) return;
   GoogleSignin.configure({ iosClientId: IOS_CLIENT_ID, webClientId: WEB_CLIENT_ID });
@@ -19,6 +34,41 @@ export function configureGoogleSignIn(): void {
 
 export function isGoogleSignInConfigured(): boolean {
   return Boolean(IOS_CLIENT_ID && WEB_CLIENT_ID);
+}
+
+/**
+ * Fails closed: the Apple button stays hidden until the owner has ticked the
+ * App ID capability and enabled the Supabase Apple provider, then flipped this
+ * flag. Without it a build renders a button that walks the user through Face ID
+ * and then fails — burning Apple's one-shot name. See docs/setup-social-sign-in.md.
+ */
+export function isAppleSignInEnabled(): boolean {
+  return process.env.EXPO_PUBLIC_APPLE_SIGN_IN_ENABLED === 'true';
+}
+
+async function stashAppleFullName(fullName: string): Promise<void> {
+  try {
+    await AsyncStorage.setItem(PENDING_APPLE_NAME_KEY, fullName);
+  } catch {
+    // Storage must never cost a session, and a lost name is survivable.
+  }
+}
+
+async function takeStashedAppleFullName(): Promise<string> {
+  try {
+    const stashed = await AsyncStorage.getItem(PENDING_APPLE_NAME_KEY);
+    return stashed ?? '';
+  } catch {
+    return '';
+  }
+}
+
+async function clearStashedAppleFullName(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(PENDING_APPLE_NAME_KEY);
+  } catch {
+    // Worst case the same name is written again on a later sign-in.
+  }
 }
 
 export async function isAppleSignInAvailable(): Promise<boolean> {
@@ -44,23 +94,41 @@ export async function signInWithApple(): Promise<SocialResult> {
       return { ok: false, outcome: { kind: 'error', message: 'Apple did not return a sign-in token.' } };
     }
 
+    // Apple sends the name only on the very first authorization, so read it
+    // BEFORE the exchange: a failed exchange must not be what discards it.
+    const fullName = [credential.fullName?.givenName, credential.fullName?.familyName]
+      .filter(Boolean)
+      .join(' ');
+
     const { error } = await supabase.auth.signInWithIdToken({
       provider: 'apple',
       token: credential.identityToken,
       nonce: nonce.raw,
     });
-    if (error) return { ok: false, outcome: { kind: 'error', message: error.message } };
+    if (error) {
+      // No session to attach the name to — park it for the next attempt.
+      if (fullName) await stashAppleFullName(fullName);
+      return { ok: false, outcome: { kind: 'error', message: error.message } };
+    }
 
-    // Apple sends the name only on the first authorization, so capture it now or never.
-    // A failure here must not cost the user their session.
-    const fullName = [credential.fullName?.givenName, credential.fullName?.familyName]
-      .filter(Boolean)
-      .join(' ');
-    if (fullName) {
+    // Signed in. Use this authorization's name, or whatever a failed earlier
+    // attempt parked. A failure here must not cost the user their session.
+    const nameToStore = fullName || (await takeStashedAppleFullName());
+    if (nameToStore) {
       try {
-        await supabase.auth.updateUser({ data: { full_name: fullName } });
+        const { error: updateError } = await supabase.auth.updateUser({
+          data: { full_name: nameToStore },
+        });
+        // updateUser RESOLVES { data, error } for auth failures rather than
+        // throwing, so the resolved error needs checking too.
+        if (updateError) {
+          console.warn('[social-auth] could not store the Apple full name:', updateError.message);
+        } else {
+          await clearStashedAppleFullName();
+        }
       } catch {
-        // Signed in regardless; the name is a nicety we can live without.
+        // Never log the name or any token; the session stands regardless.
+        console.warn('[social-auth] storing the Apple full name threw; keeping the session.');
       }
     }
     return { ok: true };

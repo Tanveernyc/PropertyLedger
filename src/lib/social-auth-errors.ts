@@ -6,8 +6,11 @@ export type ProviderOutcome = { kind: 'cancelled' } | { kind: 'error'; message: 
 const CANCELLED_CODES = new Set(['ERR_REQUEST_CANCELED', 'SIGN_IN_CANCELLED', '-5']);
 
 export function classifyProviderError(error: unknown): ProviderOutcome {
+  // The Google SDK may hand back -5 as a number rather than a string.
   const code = (error as { code?: unknown } | null)?.code;
-  if (typeof code === 'string' && CANCELLED_CODES.has(code)) return { kind: 'cancelled' };
+  if ((typeof code === 'string' || typeof code === 'number') && CANCELLED_CODES.has(String(code))) {
+    return { kind: 'cancelled' };
+  }
 
   const message = (error as { message?: unknown } | null)?.message;
   if (typeof message === 'string' && message.trim().length > 0) {

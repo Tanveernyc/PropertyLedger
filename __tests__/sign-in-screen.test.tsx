@@ -3,6 +3,7 @@
 jest.mock('../src/lib/social-auth', () => ({
   configureGoogleSignIn: jest.fn(),
   isAppleSignInAvailable: jest.fn().mockResolvedValue(true),
+  isAppleSignInEnabled: jest.fn().mockReturnValue(true),
   isGoogleSignInConfigured: jest.fn().mockReturnValue(true),
   signInWithApple: jest.fn(),
   signInWithGoogle: jest.fn(),
@@ -11,10 +12,11 @@ jest.mock('../src/db/supabase', () => ({
   supabase: { auth: { signInWithPassword: jest.fn(), signUp: jest.fn() } },
 }));
 
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import SignInScreen from '../app/(auth)/sign-in';
 import {
   isAppleSignInAvailable,
+  isAppleSignInEnabled,
   isGoogleSignInConfigured,
   signInWithApple,
   signInWithGoogle,
@@ -23,11 +25,13 @@ import {
 const mockApple = signInWithApple as jest.Mock;
 const mockGoogle = signInWithGoogle as jest.Mock;
 const mockAvailable = isAppleSignInAvailable as jest.Mock;
+const mockEnabled = isAppleSignInEnabled as jest.Mock;
 const mockConfigured = isGoogleSignInConfigured as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();
   mockAvailable.mockResolvedValue(true);
+  mockEnabled.mockReturnValue(true);
   mockConfigured.mockReturnValue(true);
   mockApple.mockResolvedValue({ ok: true });
   mockGoogle.mockResolvedValue({ ok: true });
@@ -44,6 +48,14 @@ describe('SignInScreen provider buttons', () => {
     mockAvailable.mockResolvedValue(false);
     const { queryByTestId, getByTestId } = await render(<SignInScreen />);
     await waitFor(() => expect(getByTestId('google-sign-in')).toBeTruthy());
+    expect(queryByTestId('apple-sign-in')).toBeNull();
+  });
+
+  it('hides the Apple button while the env flag is off, even where it is available', async () => {
+    mockEnabled.mockReturnValue(false);
+    const { queryByTestId, getByTestId } = await render(<SignInScreen />);
+    await waitFor(() => expect(getByTestId('google-sign-in')).toBeTruthy());
+    expect(mockAvailable).toHaveBeenCalled();
     expect(queryByTestId('apple-sign-in')).toBeNull();
   });
 
@@ -101,6 +113,19 @@ describe('SignInScreen provider buttons', () => {
     await fireEvent.press(getByTestId('google-sign-in'));
     await fireEvent.press(getByTestId('google-sign-in'));
     expect(mockGoogle).toHaveBeenCalledTimes(1);
-    resolveIt({ ok: true });
+    await act(async () => { resolveIt({ ok: true }); });
+  });
+
+  // The Apple button takes no `disabled` prop, so this is the one test that
+  // actually exercises the ref guard rather than RNTL's disabled no-op.
+  it('does not start a second Apple sign-in while one is in flight', async () => {
+    let resolveIt: (v: unknown) => void = () => {};
+    mockApple.mockReturnValue(new Promise((r) => { resolveIt = r; }));
+    const { getByTestId } = await render(<SignInScreen />);
+    await waitFor(() => expect(getByTestId('apple-sign-in')).toBeTruthy());
+    await fireEvent.press(getByTestId('apple-sign-in'));
+    await fireEvent.press(getByTestId('apple-sign-in'));
+    expect(mockApple).toHaveBeenCalledTimes(1);
+    await act(async () => { resolveIt({ ok: true }); });
   });
 });

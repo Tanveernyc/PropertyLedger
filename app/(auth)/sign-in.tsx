@@ -1,6 +1,6 @@
 // Sign-in / sign-up screen (Phase 2). Validation happens locally first
 // (src/lib/auth-validation.ts); Supabase Auth errors surface below the form.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import {
   ActivityIndicator,
@@ -17,9 +17,11 @@ import { validateSignIn, type SignInValidation } from '@/lib/auth-validation';
 import {
   configureGoogleSignIn,
   isAppleSignInAvailable,
+  isAppleSignInEnabled,
   isGoogleSignInConfigured,
   signInWithApple,
   signInWithGoogle,
+  type SocialResult,
 } from '@/lib/social-auth';
 import { colors, type, ui } from '@/theme';
 
@@ -35,6 +37,14 @@ export default function SignInScreen() {
 
   const [appleAvailable, setAppleAvailable] = useState(false);
   const googleAvailable = isGoogleSignInConfigured();
+  // The Apple button ships only once the App ID capability and the Supabase
+  // provider are configured — otherwise it would fail after Face ID.
+  const appleEnabled = isAppleSignInEnabled() && appleAvailable;
+
+  // A ref, not `submitting`: state is captured by the closure and only updates
+  // on the next render, so a second synchronous tap would sail past it. The
+  // Apple button has no `disabled` prop, so this guard is all it has.
+  const inFlight = useRef(false);
 
   useEffect(() => {
     configureGoogleSignIn();
@@ -48,15 +58,20 @@ export default function SignInScreen() {
   }, []);
 
   // One sheet at a time: a double tap must not open two sheets or create two sessions.
-  const runProvider = async (start: () => Promise<{ ok: boolean; outcome?: { kind: string; message?: string } }>) => {
-    if (submitting) return;
+  const runProvider = async (start: () => Promise<SocialResult>) => {
+    if (inFlight.current) return;
+    inFlight.current = true;
     setAuthError(null);
     setSubmitting(true);
-    const result = await start();
-    setSubmitting(false);
-    // ok: the session lands in SessionProvider and the root layout routes.
-    if (!result.ok && result.outcome?.kind === 'error') {
-      setAuthError(result.outcome.message ?? 'Sign-in failed. Please try again.');
+    try {
+      const result = await start();
+      // ok: the session lands in SessionProvider and the root layout routes.
+      if (!result.ok && result.outcome.kind === 'error') {
+        setAuthError(result.outcome.message);
+      }
+    } finally {
+      inFlight.current = false;
+      setSubmitting(false);
     }
   };
 
@@ -91,7 +106,7 @@ export default function SignInScreen() {
           {mode === 'sign-in' ? 'Sign in to your ledger' : 'Create your account'}
         </Text>
 
-        {appleAvailable ? (
+        {appleEnabled ? (
           <AppleAuthentication.AppleAuthenticationButton
             testID="apple-sign-in"
             buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
@@ -116,7 +131,7 @@ export default function SignInScreen() {
           </Pressable>
         ) : null}
 
-        {appleAvailable || googleAvailable ? (
+        {appleEnabled || googleAvailable ? (
           <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />
             <Text style={styles.dividerText}>or</Text>

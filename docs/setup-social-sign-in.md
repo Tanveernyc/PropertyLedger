@@ -25,7 +25,9 @@ app does not use, so there is also no six-month secret rotation.
    bundle id `com.trueorganichub.propertyledger`. Copy the client ID.
 4. **Create credentials → OAuth client ID → Web application**, name it
    "Supabase". Copy that client ID too. Under **Authorized redirect URIs** add
-   `https://dxjwyaldmxquuztmnrsb.supabase.co/auth/v1/callback`.
+   `https://dxjwyaldmxquuztmnrsb.supabase.co/auth/v1/callback` (a Supabase
+   dashboard formality — the native flow this app uses never visits that
+   redirect, but Supabase will not accept the provider without it).
 5. Optional but recommended: start **Branding** verification so the consent
    screen shows "PropertyLedger" instead of the Supabase project URL. It takes
    a few business days, so start it early.
@@ -37,8 +39,9 @@ Dashboard → Authentication → **Providers**:
 - **Apple**: enable. In *Authorized Client IDs* put
   `com.trueorganichub.propertyledger`. Leave Secret Key empty (native flow only).
 - **Google**: enable. *Client ID* = the **Web** client ID from step 2.4.
-  *Client Secret* = that web client's secret. In *Authorized Client IDs* put the
-  **iOS** client ID from step 2.3.
+  *Client Secret* = that web client's secret (another dashboard formality: the
+  native flow never exchanges it, but the form requires it). In *Authorized
+  Client IDs* put the **iOS** client ID from step 2.3.
 - Leave **Confirm email** OFF — see §4 of the design spec for why, and what to
   change if that decision is revisited.
 
@@ -49,7 +52,13 @@ In `.env` (never committed):
 ```
 EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=<iOS client id>.apps.googleusercontent.com
 EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=<web client id>.apps.googleusercontent.com
+EXPO_PUBLIC_APPLE_SIGN_IN_ENABLED=true
 ```
+
+The Apple flag fails closed: until it is `true`, the Apple button does not
+render at all. Set it only once §1 and §3 above are actually done — otherwise a
+build walks the user through Face ID and then fails, burning the one-shot name
+Apple sends on first authorization.
 
 In `app.json`, replace the placeholder in the google-signin plugin with the
 **reversed** iOS client ID:

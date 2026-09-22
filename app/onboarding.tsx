@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { router, Stack } from 'expo-router';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
-import { createProperty } from '@/db/properties';
+import { createProperty, listProperties } from '@/db/properties';
 import type { NewProperty } from '@/types';
 import { type, ui } from '@/theme';
 
@@ -34,11 +34,20 @@ const CHOICES: { key: string; title: string; body: string; ledgers: NewProperty[
 export default function OnboardingScreen() {
   const queryClient = useQueryClient();
   const mutation = useMutation({
+    // Idempotent: a double tap (or a retry after a partial failure) must not
+    // create a second "Household". Skip any ledger whose name already exists.
     mutationFn: async (ledgers: NewProperty[]) => {
-      for (const l of ledgers) await createProperty(l);
+      const existing = await listProperties({ includeArchived: true });
+      const taken = new Set(existing.map((p) => p.name.trim().toLowerCase()));
+      for (const l of ledgers) {
+        if (taken.has(l.name.trim().toLowerCase())) continue;
+        await createProperty(l);
+      }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['properties'] });
+    onSuccess: async () => {
+      // 'all' also refetches the unmounted dashboard query, whose cached [] would
+      // otherwise re-fire the onboarding redirect on the next Dashboard tap.
+      await queryClient.invalidateQueries({ queryKey: ['properties'], refetchType: 'all' });
       router.replace('/(tabs)/properties');
     },
     onError: (e: Error) => Alert.alert('Could not set up', e.message),

@@ -15,6 +15,7 @@ import { supabase } from '@/db/supabase';
 import { buildDashboardModel } from '@/lib/dashboard';
 import { todayISO } from '@/lib/dates';
 import { collectionTitle, kindsOf } from '@/lib/ledger-copy';
+import { shouldOnboard } from '@/lib/onboarding';
 import { colors, radius, ui } from '@/theme';
 
 const SUPPORT_EMAIL = 'support@trueorganichub.com';
@@ -30,7 +31,7 @@ async function contactSupport() {
 export default function DashboardScreen() {
   const { session } = useSession();
 
-  const { data: properties } = useQuery({
+  const { data: properties, isFetching } = useQuery({
     queryKey: ['properties', { includeArchived: true }],
     queryFn: () => listProperties({ includeArchived: true }),
   });
@@ -40,11 +41,11 @@ export default function DashboardScreen() {
 
   // First run: a signed-in user with no ledgers (archived included) is sent to
   // the chooser instead of an empty dashboard. Onboarding invalidates
-  // ['properties'] on success, so this refetches to a non-empty list and the
-  // effect does not fire again.
+  // ['properties'] (refetchType 'all') on success, so the stale [] is refetched
+  // even while this screen is unmounted; the isFetching guard covers the gap.
   useEffect(() => {
-    if (properties && properties.length === 0) router.replace('/onboarding');
-  }, [properties]);
+    if (shouldOnboard(properties, isFetching)) router.replace('/onboarding');
+  }, [properties, isFetching]);
 
   const model = buildDashboardModel(properties ?? [], expenses ?? [], income ?? [], todayISO());
   const categoryNames = new Map((categories ?? []).map((c) => [c.id, c.name]));

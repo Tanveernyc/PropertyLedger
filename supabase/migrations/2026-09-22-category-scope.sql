@@ -28,3 +28,6 @@ from (values
 where not exists (
   select 1 from categories c
    where c.is_system = true and c.name = v.name and c.kind = v.kind and c.scope = 'personal');
+
+-- User-created categories predate scopes; make them visible to every ledger kind.
+update categories set scope = 'both' where is_system = false and scope = 'rental';

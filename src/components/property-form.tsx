@@ -17,7 +17,8 @@ interface Props {
   /** Called with a validated payload; the caller performs the insert/update. */
   onSubmit: (values: NewProperty) => void;
   submitting: boolean;
-  submitLabel: string;
+  /** Fixed text, or a function of the currently selected kind ("Create Property" / "Create Budget"). */
+  submitLabel: string | ((kind: PropertyType) => string);
 }
 
 export function PropertyForm({ initial, onSubmit, submitting, submitLabel }: Props) {
@@ -34,21 +35,29 @@ export function PropertyForm({ initial, onSubmit, submitting, submitLabel }: Pro
   const [errors, setErrors] = useState<PropertyValidation['errors'] & { price?: string }>({});
 
   const isRental = propertyType === 'rental';
+  const resolvedSubmitLabel = typeof submitLabel === 'function' ? submitLabel(propertyType) : submitLabel;
 
   const submit = () => {
     const validation = validateProperty({ name, property_type: propertyType });
     const price = parsePriceInput(priceText);
     const nextErrors: typeof errors = { ...validation.errors };
+    // Price is only validated for rentals; a personal budget hides the field.
     if (isRental && price === undefined) nextErrors.price = 'Price must be a positive number.';
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
+    // Spec §4.2: switching a ledger to personal hides the property fields but
+    // never clears them, so the values are sent from state regardless of kind.
+    // Personal + unparseable non-empty text keeps whatever was stored.
+    const purchasePrice =
+      price !== undefined ? price : priceText.trim() === '' ? null : initial?.purchase_price ?? null;
+
     onSubmit({
       name: name.trim(),
       property_type: propertyType,
-      address: isRental ? address.trim() || null : null,
-      purchase_date: isRental ? purchaseDate.trim() || null : null,
-      purchase_price: isRental ? price ?? null : null,
+      address: address.trim() || null,
+      purchase_date: purchaseDate.trim() || null,
+      purchase_price: purchasePrice,
       notes: notes.trim() || null,
     });
   };
@@ -61,7 +70,7 @@ export function PropertyForm({ initial, onSubmit, submitting, submitLabel }: Pro
       automaticallyAdjustKeyboardInsets
       keyboardDismissMode="interactive"
     >
-      <Text style={styles.label}>What is this ledger for? *</Text>
+      <Text style={styles.label}>Type *</Text>
       <ScrollView horizontal contentContainerStyle={styles.typeRow}>
         {(
           [
@@ -130,7 +139,7 @@ export function PropertyForm({ initial, onSubmit, submitting, submitLabel }: Pro
       />
 
       <Pressable style={styles.button} onPress={submit} disabled={submitting}>
-        <Text style={styles.buttonText}>{submitting ? 'Saving…' : submitLabel}</Text>
+        <Text style={styles.buttonText}>{submitting ? 'Saving…' : resolvedSubmitLabel}</Text>
       </Pressable>
     </ScrollView>
   );

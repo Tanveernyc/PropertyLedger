@@ -125,16 +125,11 @@ export default function ReportsScreen() {
         <PLRow label="Expenses" value={portfolio.totalExpense} />
         <View style={styles.divider} />
         <PLRow label="Net" value={portfolio.net} positive={portfolio.net >= 0} bold />
-        {portfolioIsPersonal ? (
-          <>
-            <PLRow label="Saved" value={portfolio.net} positive={portfolio.net >= 0} bold={false} />
-            {rate !== null ? (
-              <Text style={styles.savingsRate}>
-                {rate >= 0 ? 'Savings rate' : 'Overspent by'} {Math.abs(Math.round(rate * 100))}% of
-                income
-              </Text>
-            ) : null}
-          </>
+        {portfolioIsPersonal && rate !== null ? (
+          <Text style={styles.savingsRate}>
+            {rate >= 0 ? 'Savings rate' : 'Overspent by'} {Math.abs(Math.round(rate * 100))}% of
+            income
+          </Text>
         ) : null}
       </View>
 
@@ -149,16 +144,11 @@ export default function ReportsScreen() {
             <PLRow label="Expenses" value={p.totalExpense} />
             <View style={styles.divider} />
             <PLRow label="Net" value={p.net} positive={p.net >= 0} bold />
-            {isPersonal ? (
-              <>
-                <PLRow label="Saved" value={p.net} positive={p.net >= 0} bold={false} />
-                {cardRate !== null ? (
-                  <Text style={styles.savingsRate}>
-                    {cardRate >= 0 ? 'Savings rate' : 'Overspent by'}{' '}
-                    {Math.abs(Math.round(cardRate * 100))}% of income
-                  </Text>
-                ) : null}
-              </>
+            {isPersonal && cardRate !== null ? (
+              <Text style={styles.savingsRate}>
+                {cardRate >= 0 ? 'Savings rate' : 'Overspent by'}{' '}
+                {Math.abs(Math.round(cardRate * 100))}% of income
+              </Text>
             ) : null}
           </View>
         );

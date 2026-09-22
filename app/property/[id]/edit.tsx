@@ -1,6 +1,6 @@
 // Edit-property screen (Phase 3): edit fields, archive/unarchive (never delete).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { PropertyForm } from '@/components/property-form';
 import { getProperty, setPropertyArchived, updateProperty } from '@/db/properties';
@@ -66,11 +66,12 @@ export default function EditPropertyScreen() {
 
   return (
     <View style={styles.container}>
+      <Stack.Screen options={{ title: `Edit ${nounFor(property.property_type).one}` }} />
       <PropertyForm
         initial={property}
         onSubmit={(values) => saveMutation.mutate(values)}
         submitting={saveMutation.isPending}
-        submitLabel="Save Changes"
+        submitLabel={(kind) => `Save ${nounFor(kind).one}`}
       />
       <Pressable style={styles.archiveButton} onPress={toggleArchive}>
         <Text style={styles.archiveText}>

@@ -8,6 +8,8 @@ import { listCategories } from '@/db/categories';
 import { listPropertyExpenses } from '@/db/expenses';
 import { listProperties } from '@/db/properties';
 import { calcCategoryTrend } from '@/lib/aggregate';
+import { categoriesForLedger } from '@/lib/categories';
+import { collectionNoun, kindsOf } from '@/lib/ledger-copy';
 import { formatMoney } from '@/lib/money';
 import { colors, money, ui } from '@/theme';
 
@@ -27,7 +29,8 @@ export default function HistoryScreen() {
     enabled: !!propertyId,
   });
 
-  const expenseCategories = (categories ?? []).filter((c) => c.kind === 'expense');
+  const selected = (properties ?? []).find((p) => p.id === propertyId);
+  const expenseCategories = categoriesForLedger(categories ?? [], selected?.property_type ?? 'rental', 'expense');
 
   const trend = useMemo(
     () => (categoryId ? calcCategoryTrend(expenses ?? [], categoryId, groupBy) : []),
@@ -39,7 +42,7 @@ export default function HistoryScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.label}>Property</Text>
+      <Text style={styles.label}>{collectionNoun(kindsOf(properties ?? []))}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
         {(properties ?? []).map((p) => (
           <Pressable
@@ -83,7 +86,7 @@ export default function HistoryScreen() {
         <Text style={styles.empty}>
           {propertyId && categoryId
             ? 'No expenses for this category yet.'
-            : 'Pick a property and a category to see the trend.'}
+            : `Pick a ${collectionNoun(kindsOf(properties ?? [])).toLowerCase()} and a category to see the trend.`}
         </Text>
       ) : (
         <>

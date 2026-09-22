@@ -1,6 +1,6 @@
 // Category list helpers — pure functions, no React, no network (spec §4 rule).
 // Phase 4 tests: expense/income lists filter by kind correctly.
-import type { Category, CategoryKind } from '@/types';
+import type { Category, CategoryKind, LedgerKind } from '@/types';
 
 /** Only categories of the given kind (expense pickers must never show income rows). */
 export function filterCategoriesByKind(categories: Category[], kind: CategoryKind): Category[] {
@@ -20,4 +20,15 @@ export function splitCategoriesByKind(
 /** System categories are seeded data shared by design — they can never be deleted. */
 export function canDeleteCategory(category: Category): boolean {
   return !category.is_system;
+}
+
+/** Categories a ledger of `ledgerKind` may use for `entryKind` entries (spec §4.1). */
+export function categoriesForLedger(
+  categories: Category[],
+  ledgerKind: LedgerKind,
+  entryKind: CategoryKind
+): Category[] {
+  return categories.filter(
+    (c) => c.kind === entryKind && (c.scope === 'both' || c.scope === ledgerKind)
+  );
 }

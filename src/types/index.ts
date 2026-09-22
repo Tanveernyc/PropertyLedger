@@ -3,6 +3,12 @@
 
 export type PropertyType = 'rental' | 'personal';
 
+/** Same values as PropertyType; the name says what the app means by it now. */
+export type LedgerKind = PropertyType;
+
+/** Which ledger kinds a category is offered to (spec §4.1). */
+export type CategoryScope = 'rental' | 'personal' | 'both';
+
 /** A row in the properties table. */
 export interface Property {
   id: string;
@@ -27,6 +33,7 @@ export interface Category {
   name: string;
   kind: CategoryKind;
   is_system: boolean;
+  scope: CategoryScope;
   created_at: string;
 }
 

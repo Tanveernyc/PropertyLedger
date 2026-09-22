@@ -21,6 +21,7 @@ import { deleteIncome, listPropertyIncome } from '@/db/income';
 import { getProperty } from '@/db/properties';
 import { skipRecurringMonth } from '@/db/recurring';
 import { confirmDelete } from '@/lib/confirm-delete';
+import { nounFor } from '@/lib/ledger-copy';
 import { formatMoney } from '@/lib/money';
 import {
   buildTimeline,
@@ -98,7 +99,7 @@ export default function PropertyTransactionsScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: property?.name ?? 'Property' }} />
+      <Stack.Screen options={{ title: property?.name ?? nounFor(property?.property_type ?? 'rental').one }} />
 
       <View style={styles.header}>
         <Link href={{ pathname: '/property/[id]/recurring', params: { id } }} asChild>
@@ -126,7 +127,7 @@ export default function PropertyTransactionsScreen() {
         >
           <Text style={!categoryId ? styles.chipTextActive : styles.chipText}>All</Text>
         </Pressable>
-        {(categories ?? []).map((c) => (
+        {(categories ?? []).filter((c) => c.scope === 'both' || c.scope === property?.property_type).map((c) => (
           <Pressable
             key={c.id}
             style={[styles.chip, categoryId === c.id && styles.chipActive]}

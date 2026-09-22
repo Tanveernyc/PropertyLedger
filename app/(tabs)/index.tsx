@@ -3,6 +3,7 @@
 // presentation in src/components/dashboard-view.tsx.
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import { useEffect } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { DashboardView } from '@/components/dashboard-view';
 import { useSession } from '@/components/session-provider';
@@ -13,6 +14,8 @@ import { listProperties } from '@/db/properties';
 import { supabase } from '@/db/supabase';
 import { buildDashboardModel } from '@/lib/dashboard';
 import { todayISO } from '@/lib/dates';
+import { collectionTitle, kindsOf } from '@/lib/ledger-copy';
+import { shouldOnboard } from '@/lib/onboarding';
 import { colors, radius, ui } from '@/theme';
 
 const SUPPORT_EMAIL = 'support@trueorganichub.com';
@@ -28,13 +31,21 @@ async function contactSupport() {
 export default function DashboardScreen() {
   const { session } = useSession();
 
-  const { data: properties } = useQuery({
+  const { data: properties, isFetching } = useQuery({
     queryKey: ['properties', { includeArchived: true }],
     queryFn: () => listProperties({ includeArchived: true }),
   });
   const { data: expenses } = useQuery({ queryKey: ['expenses', 'all'], queryFn: listAllExpenses });
   const { data: income } = useQuery({ queryKey: ['income', 'all'], queryFn: listAllIncome });
   const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: listCategories });
+
+  // First run: a signed-in user with no ledgers (archived included) is sent to
+  // the chooser instead of an empty dashboard. Onboarding invalidates
+  // ['properties'] (refetchType 'all') on success, so the stale [] is refetched
+  // even while this screen is unmounted; the isFetching guard covers the gap.
+  useEffect(() => {
+    if (shouldOnboard(properties, isFetching)) router.replace('/onboarding');
+  }, [properties, isFetching]);
 
   const model = buildDashboardModel(properties ?? [], expenses ?? [], income ?? [], todayISO());
   const categoryNames = new Map((categories ?? []).map((c) => [c.id, c.name]));
@@ -44,6 +55,7 @@ export default function DashboardScreen() {
       <DashboardView
         model={model}
         categoryNames={categoryNames}
+        collectionTitle={collectionTitle(kindsOf(properties ?? []))}
         onQuickAdd={() => router.push('/add')}
         onOpenProperty={(id) => router.push({ pathname: '/property/[id]', params: { id } })}
         onOpenTransaction={(entry) =>

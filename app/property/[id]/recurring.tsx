@@ -9,6 +9,7 @@ import { getProperty } from '@/db/properties';
 import { deleteRecurringRule, listRecurringRules, stopRecurringRule } from '@/db/recurring';
 import { confirmDelete } from '@/lib/confirm-delete';
 import { monthKey } from '@/lib/dates';
+import { nounFor } from '@/lib/ledger-copy';
 import { formatMoney } from '@/lib/money';
 import type { RecurringRule } from '@/types';
 import { colors, money, type, ui } from '@/theme';
@@ -58,7 +59,9 @@ export default function PropertyRecurringScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: `${property?.name ?? 'Property'} · Recurring` }} />
+      <Stack.Screen
+        options={{ title: `${property?.name ?? nounFor(property?.property_type ?? 'rental').one} · Recurring` }}
+      />
       <View style={styles.header}>
         <Link href={{ pathname: '/recurring/new', params: { kind: 'expense', propertyId: id } }} style={styles.link}>
           + Expense rule

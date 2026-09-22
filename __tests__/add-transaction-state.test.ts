@@ -42,6 +42,7 @@ describe('recent-first category ordering', () => {
     name,
     kind,
     is_system: true,
+    scope: 'rental',
     created_at: '2026-07-15T00:00:00Z',
   });
   const categories = [
@@ -64,5 +65,30 @@ describe('recent-first category ordering', () => {
   it('pushRecentCategory dedupes and caps', () => {
     expect(pushRecentCategory(['a', 'b'], 'b')).toEqual(['b', 'a']);
     expect(pushRecentCategory(['a', 'b', 'c', 'd', 'e'], 'f')).toEqual(['f', 'a', 'b', 'c', 'd']);
+  });
+});
+
+describe('orderCategoriesByRecent with a ledger kind', () => {
+  const category = (overrides: Partial<Category> & { id: string }): Category => ({
+    user_id: null,
+    name: overrides.id,
+    kind: 'expense',
+    is_system: true,
+    scope: 'rental',
+    created_at: '2026-07-15T00:00:00Z',
+    ...overrides,
+  });
+
+  it('drops out-of-scope categories before ordering, and a recent id that is out of scope is ignored', () => {
+    const cats = [
+      category({ id: 'r', kind: 'expense', scope: 'rental' }),
+      category({ id: 'b', kind: 'expense', scope: 'both' }),
+      category({ id: 'p', kind: 'expense', scope: 'personal' }),
+    ];
+    expect(orderCategoriesByRecent(cats, ['r', 'p'], 'expense', 'personal').map((c) => c.id)).toEqual(['p', 'b']);
+  });
+  it('without a ledger kind behaves exactly as before', () => {
+    const cats = [category({ id: 'r', kind: 'expense', scope: 'rental' }), category({ id: 'p', kind: 'expense', scope: 'personal' })];
+    expect(orderCategoriesByRecent(cats, ['p'], 'expense').map((c) => c.id)).toEqual(['p', 'r']);
   });
 });

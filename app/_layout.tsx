@@ -36,9 +36,13 @@ function RootNavigator() {
           so a null session always lands on (auth)/sign-in. */}
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="property/new" options={{ title: 'New Property', presentation: 'modal' }} />
-        <Stack.Screen name="property/[id]/index" options={{ title: 'Property' }} />
-        <Stack.Screen name="property/[id]/edit" options={{ title: 'Edit Property' }} />
+        <Stack.Screen
+          name="onboarding"
+          options={{ title: 'Welcome', headerBackButtonDisplayMode: 'minimal', gestureEnabled: false }}
+        />
+        <Stack.Screen name="property/new" options={{ title: 'New Ledger', presentation: 'modal' }} />
+        <Stack.Screen name="property/[id]/index" options={{ title: 'Ledger' }} />
+        <Stack.Screen name="property/[id]/edit" options={{ title: 'Edit Ledger' }} />
         <Stack.Screen name="property/[id]/recurring" options={{ title: 'Recurring' }} />
         <Stack.Screen name="transaction/[kind]/[id]" options={{ title: 'Edit Transaction' }} />
         <Stack.Screen name="categories" options={{ title: 'Categories' }} />

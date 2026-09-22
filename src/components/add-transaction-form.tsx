@@ -27,6 +27,7 @@ import {
   type AddTransactionState,
 } from '@/lib/add-transaction-state';
 import { validateTransactionForm, type TransactionValidation } from '@/lib/expense-validation';
+import { collectionNoun, kindsOf, partyLabel } from '@/lib/ledger-copy';
 import type { CategoryKind } from '@/types';
 import { colors, money, ui } from '@/theme';
 
@@ -43,7 +44,6 @@ export function AddTransactionForm({ kind }: { kind: CategoryKind }) {
 
   const isExpense = kind === 'expense';
   const dateLabel = isExpense ? 'Paid on' : 'Received on';
-  const partyLabel = isExpense ? 'Vendor' : 'Source';
 
   const { data: properties } = useQuery({
     queryKey: ['properties', { includeArchived: false }],
@@ -65,7 +65,17 @@ export function AddTransactionForm({ kind }: { kind: CategoryKind }) {
     })();
   }, [kind]);
 
-  const kindCategories = orderCategoriesByRecent(categories ?? [], recentCategoryIds, kind);
+  const selectedLedger = (properties ?? []).find((p) => p.id === state.propertyId);
+  const ledgerKind = selectedLedger?.property_type;
+  const kindCategories = orderCategoriesByRecent(categories ?? [], recentCategoryIds, kind, ledgerKind);
+
+  // Category selection tracks the selected ledger's scope; drop it if it no longer applies.
+  useEffect(() => {
+    if (!properties || !categories) return;
+    if (state.categoryId && !kindCategories.some((c) => c.id === state.categoryId)) set({ categoryId: null });
+  }, [state.propertyId, properties, categories]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const isPersonal = ledgerKind === 'personal';
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -74,8 +84,8 @@ export function AddTransactionForm({ kind }: { kind: CategoryKind }) {
         date: state.date,
         propertyId: state.propertyId,
         categoryId: state.categoryId,
-        periodStart: isExpense ? state.periodStart : undefined,
-        periodEnd: isExpense ? state.periodEnd : undefined,
+        periodStart: isExpense && !isPersonal ? state.periodStart : undefined,
+        periodEnd: isExpense && !isPersonal ? state.periodEnd : undefined,
       });
       setErrors(validation.errors);
       if (!validation.valid || validation.amount === undefined) {
@@ -123,7 +133,7 @@ export function AddTransactionForm({ kind }: { kind: CategoryKind }) {
 
   // Create a category without leaving the form; the new one is selected right away.
   const newCategoryMutation = useMutation({
-    mutationFn: (name: string) => createCategory(name, kind),
+    mutationFn: (name: string) => createCategory(name, kind, ledgerKind ?? 'both'),
     onSuccess: (category) => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       set({ categoryId: category.id });
@@ -146,7 +156,7 @@ export function AddTransactionForm({ kind }: { kind: CategoryKind }) {
       automaticallyAdjustKeyboardInsets
       keyboardDismissMode="interactive"
     >
-      <Text style={styles.label}>Property *</Text>
+      <Text style={styles.label}>{collectionNoun(kindsOf(properties ?? []))} *</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
         {(properties ?? []).map((p) => (
           <Chip
@@ -194,7 +204,7 @@ export function AddTransactionForm({ kind }: { kind: CategoryKind }) {
       />
       {errors.date ? <Text style={styles.error}>{errors.date}</Text> : null}
 
-      {isExpense ? (
+      {isExpense && ledgerKind !== 'personal' ? (
         <>
           <Text style={styles.label}>Covers period (optional)</Text>
           <View style={styles.periodRow}>
@@ -217,12 +227,18 @@ export function AddTransactionForm({ kind }: { kind: CategoryKind }) {
         </>
       ) : null}
 
-      <Text style={styles.label}>{partyLabel}</Text>
+      <Text style={styles.label}>{partyLabel(ledgerKind ?? 'rental', kind)}</Text>
       <TextInput
         style={styles.input}
         value={state.vendor}
         onChangeText={(vendor) => set({ vendor })}
-        placeholder={isExpense ? 'e.g. Allstate' : 'e.g. tenant name'}
+        placeholder={
+          isExpense
+            ? ledgerKind === 'personal'
+              ? "e.g. Trader Joe's"
+              : 'e.g. Allstate'
+            : 'e.g. tenant name'
+        }
       />
 
       <Text style={styles.label}>Notes</Text>

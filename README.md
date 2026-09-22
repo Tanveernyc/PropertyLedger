@@ -6,7 +6,7 @@ App Store: **PropertyLedger: Rental P&L** (bundle `com.trueorganichub.propertyle
 
 ## What it does
 
-- **Properties** - one ledger per property (rental or personal), archivable, with optional address and purchase details.
+- **Ledgers** - each one a rental property or a personal budget. Rentals carry optional address and purchase details; budgets are just a name. Both are archivable, and a mixed account sees them grouped as *Properties* and *Budgets*.
 - **Entries** - expenses and income, each with a category, date, optional vendor/source, notes, and (expenses) the period a bill covers.
 - **Recurring rules** - a template that posts one entry on the 1st of every month from a start month until stopped or for N months. Backfills past months on creation, catches up on every launch, never duplicates, and never overwrites a month you edited or deleted. Rules are fully editable; optionally rewrite already-posted months from a chosen month.
 - **Reports** - portfolio and per-property P&L for this year / last year / all time / custom range; expenses by category.
@@ -18,7 +18,9 @@ Money is `numeric(12,2)` in Postgres and integer-cent math in the app. Dates are
 
 ## Using the app
 
-**First run.** Sign up with an email and password. Go to **Properties → + Add**, name the property, pick *rental* or *personal*, save.
+**First run.** Sign up with an email and password. The app asks *What do you want to track?* - *A rental property*, *My own budget*, or *Both* - and creates the first ledger(s) for you ("My first property" / "Household"). Add more later from the ledgers tab (titled **Properties**, **Budgets**, or **Ledgers** depending on what you have) → **+ Add**: pick *Rental property* or *Personal budget*, name it, save.
+
+**Personal budgets.** A budget is a ledger with `property_type = 'personal'`; everything else (entries, recurring rules, reports, export) is the same engine. What changes is the wording and the category list: a budget is called a *Budget*, its counterparties are *Payee*/*Source* instead of *Vendor*/*Source*, and its category picker shows the personal set (Salary, Groceries, Dining Out, Fuel, Subscriptions, Phone, Rent/Mortgage, …) plus shared ones like Insurance and Repairs; rental ledgers keep the landlord set. New categories you create take the scope of the ledger you are in. The dashboard and **Reports** add a *This Month* / *Last Month* preset and a **savings rate** line (income minus expenses, as a share of income) for budgets. An account with only rental properties keeps its Property/Properties wording throughout; the kind picker on the ledger form and the month line on the dashboard are the only additions it sees.
 
 **Log a one-off entry.** **Add** tab → choose *Expense* or *Income* → tap the property → tap a category (tap **+ New** to create one on the spot) → amount → date defaults to today → optional vendor/source, covers-period, notes → **Save**. The form keeps the property and category selected so the next entry is amount + save.
 

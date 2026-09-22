@@ -14,7 +14,7 @@ const mockSignInWithIdToken = supabase.auth.signInWithIdToken as jest.Mock;
 const mockUpdateUser = supabase.auth.updateUser as jest.Mock;
 const mockAppleSignIn = AppleAuthentication.signInAsync as jest.Mock;
 const mockGoogleSignIn = GoogleSignin.signIn as jest.Mock;
-const PENDING_KEY = 'pending-apple-full-name';
+const pendingKey = (appleUserId: string) => `pending-apple-full-name:${appleUserId}`;
 
 beforeEach(async () => {
   jest.clearAllMocks();
@@ -69,29 +69,68 @@ describe('signInWithApple', () => {
     await expect(signInWithApple()).resolves.toEqual({ ok: true });
   });
 
-  it('parks the one-shot name when the token exchange fails', async () => {
+  it('parks the one-shot name, scoped to the Apple user id, when the token exchange fails', async () => {
     mockAppleSignIn.mockResolvedValue({
       identityToken: 'apple-token',
       fullName: { givenName: 'Ada', familyName: 'Lovelace' },
+      user: 'apple-user-A',
     });
     mockSignInWithIdToken.mockResolvedValue({ data: {}, error: { message: 'provider disabled' } });
 
     const result = await signInWithApple();
 
     expect(result).toEqual({ ok: false, outcome: { kind: 'error', message: 'provider disabled' } });
-    await expect(AsyncStorage.getItem(PENDING_KEY)).resolves.toBe('Ada Lovelace');
+    await expect(AsyncStorage.getItem(pendingKey('apple-user-A'))).resolves.toBe('Ada Lovelace');
     expect(mockUpdateUser).not.toHaveBeenCalled();
   });
 
-  it('uses the parked name on a later sign-in where Apple sends none, then clears it', async () => {
-    await AsyncStorage.setItem(PENDING_KEY, 'Ada Lovelace');
-    mockAppleSignIn.mockResolvedValue({ identityToken: 'apple-token', fullName: null });
+  it('uses the parked name on a later sign-in with the same Apple user id where Apple sends none, then clears it', async () => {
+    await AsyncStorage.setItem(pendingKey('apple-user-A'), 'Ada Lovelace');
+    mockAppleSignIn.mockResolvedValue({ identityToken: 'apple-token', fullName: null, user: 'apple-user-A' });
 
     const result = await signInWithApple();
 
     expect(result).toEqual({ ok: true });
     expect(mockUpdateUser).toHaveBeenCalledWith({ data: { full_name: 'Ada Lovelace' } });
-    await expect(AsyncStorage.getItem(PENDING_KEY)).resolves.toBeNull();
+    await expect(AsyncStorage.getItem(pendingKey('apple-user-A'))).resolves.toBeNull();
+  });
+
+  it('never applies user A parked name to user B (shared-device leak)', async () => {
+    // User A: exchange fails with a name present, stashed under A's key.
+    mockAppleSignIn.mockResolvedValue({
+      identityToken: 'apple-token-a',
+      fullName: { givenName: 'Ada', familyName: 'Lovelace' },
+      user: 'apple-user-A',
+    });
+    mockSignInWithIdToken.mockResolvedValue({ data: {}, error: { message: 'provider disabled' } });
+    await signInWithApple();
+    await expect(AsyncStorage.getItem(pendingKey('apple-user-A'))).resolves.toBe('Ada Lovelace');
+
+    jest.clearAllMocks();
+
+    // User B: successful sign-in, Apple sends no name (already-authorized
+    // Apple ID), different credential.user. B must not receive A's name.
+    mockAppleSignIn.mockResolvedValue({ identityToken: 'apple-token-b', fullName: null, user: 'apple-user-B' });
+    mockSignInWithIdToken.mockResolvedValue({ data: { session: {} }, error: null });
+
+    const result = await signInWithApple();
+
+    expect(result).toEqual({ ok: true });
+    expect(mockUpdateUser).not.toHaveBeenCalled();
+    // A's stash must remain untouched, not consumed by B.
+    await expect(AsyncStorage.getItem(pendingKey('apple-user-A'))).resolves.toBe('Ada Lovelace');
+  });
+
+  it('clears the stashed name once consumed even when updateUser resolves an error', async () => {
+    await AsyncStorage.setItem(pendingKey('apple-user-A'), 'Ada Lovelace');
+    mockAppleSignIn.mockResolvedValue({ identityToken: 'apple-token', fullName: null, user: 'apple-user-A' });
+    mockUpdateUser.mockResolvedValue({ data: {}, error: { message: 'nope' } });
+
+    const result = await signInWithApple();
+
+    expect(result).toEqual({ ok: true });
+    expect(mockUpdateUser).toHaveBeenCalledWith({ data: { full_name: 'Ada Lovelace' } });
+    await expect(AsyncStorage.getItem(pendingKey('apple-user-A'))).resolves.toBeNull();
   });
 
   it('reports a missing identity token instead of passing null on', async () => {

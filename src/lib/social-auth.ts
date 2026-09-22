@@ -19,7 +19,15 @@ const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 // Apple hands out the user's name exactly once, on the first authorization. If
 // the token exchange fails that name is gone forever, so park it here and use
 // it on the next successful Apple sign-in.
-const PENDING_APPLE_NAME_KEY = 'pending-apple-full-name';
+//
+// Scoped per Apple user id (`credential.user`, stable per Apple ID per app) so
+// that on a shared device, user A's parked name can never be consumed by user
+// B's sign-in just because B's Apple ID has already authorized this app (which
+// makes Apple send `fullName: null` — the normal case for any non-first
+// authorization, not a signal that B's name equals A's stash).
+function pendingAppleNameKey(appleUserId: string): string {
+  return `pending-apple-full-name:${appleUserId}`;
+}
 
 /**
  * Called from the sign-in screen's effect, not at app start — the screen is the
@@ -46,28 +54,29 @@ export function isAppleSignInEnabled(): boolean {
   return process.env.EXPO_PUBLIC_APPLE_SIGN_IN_ENABLED === 'true';
 }
 
-async function stashAppleFullName(fullName: string): Promise<void> {
+async function stashAppleFullName(appleUserId: string, fullName: string): Promise<void> {
   try {
-    await AsyncStorage.setItem(PENDING_APPLE_NAME_KEY, fullName);
+    await AsyncStorage.setItem(pendingAppleNameKey(appleUserId), fullName);
   } catch {
     // Storage must never cost a session, and a lost name is survivable.
   }
 }
 
-async function takeStashedAppleFullName(): Promise<string> {
+// Reads AND clears in one step: whether or not the name goes on to be applied
+// successfully, a stale value must never survive to be misapplied to a later
+// session under this same Apple user id.
+async function takeStashedAppleFullName(appleUserId: string): Promise<string> {
+  const key = pendingAppleNameKey(appleUserId);
   try {
-    const stashed = await AsyncStorage.getItem(PENDING_APPLE_NAME_KEY);
+    const stashed = await AsyncStorage.getItem(key);
+    try {
+      await AsyncStorage.removeItem(key);
+    } catch {
+      // Worst case the same name is re-applied on a later sign-in.
+    }
     return stashed ?? '';
   } catch {
     return '';
-  }
-}
-
-async function clearStashedAppleFullName(): Promise<void> {
-  try {
-    await AsyncStorage.removeItem(PENDING_APPLE_NAME_KEY);
-  } catch {
-    // Worst case the same name is written again on a later sign-in.
   }
 }
 
@@ -106,25 +115,29 @@ export async function signInWithApple(): Promise<SocialResult> {
       nonce: nonce.raw,
     });
     if (error) {
-      // No session to attach the name to — park it for the next attempt.
-      if (fullName) await stashAppleFullName(fullName);
+      // No session to attach the name to — park it for the next attempt, but
+      // only when we have a stable id to scope it to. Without credential.user
+      // there is no safe key, so the name is lost rather than risk a global
+      // stash that could leak onto a different account.
+      if (fullName && credential.user) await stashAppleFullName(credential.user, fullName);
       return { ok: false, outcome: { kind: 'error', message: error.message } };
     }
 
     // Signed in. Use this authorization's name, or whatever a failed earlier
-    // attempt parked. A failure here must not cost the user their session.
-    const nameToStore = fullName || (await takeStashedAppleFullName());
+    // attempt parked FOR THIS SAME Apple user id. A failure here must not
+    // cost the user their session.
+    const nameToStore =
+      fullName || (credential.user ? await takeStashedAppleFullName(credential.user) : '');
     if (nameToStore) {
       try {
         const { error: updateError } = await supabase.auth.updateUser({
           data: { full_name: nameToStore },
         });
         // updateUser RESOLVES { data, error } for auth failures rather than
-        // throwing, so the resolved error needs checking too.
+        // throwing, so the resolved error needs checking too. Either way the
+        // stash was already cleared by takeStashedAppleFullName above.
         if (updateError) {
           console.warn('[social-auth] could not store the Apple full name:', updateError.message);
-        } else {
-          await clearStashedAppleFullName();
         }
       } catch {
         // Never log the name or any token; the session stands regardless.

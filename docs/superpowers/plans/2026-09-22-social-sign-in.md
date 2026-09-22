@@ -30,9 +30,9 @@ Five input classes the spec implies but that no task's happy path exercises. Eac
 
 1. **Apple returns a null `identityToken`** (revoked credential, Keychain hiccup). Expected: a plain error message, not a crash on `token.substring` inside supabase-js. → Task 3.
 2. **Google returns a success payload with no `idToken`** (the SDK's `data.idToken` is nullable when Play/keychain state is odd). Expected: same treatment as Apple's null token. → Task 3.
-3. **The user taps a provider button twice before the first sheet resolves.** Expected: one sign-in attempt, not two overlapping sheets or two sessions. → Task 4.
-4. **Apple's `fullName` persists but `updateUser` fails** (offline right after the token exchange). Expected: the user is still signed in; the name is simply not stored. → Task 3.
-5. **A provider error arrives while a previous password error is on screen.** Expected: the new message replaces the old one; a cancel clears nothing and leaves the screen usable. → Task 4.
+3. **The user taps a provider button twice before the first sheet resolves.** Expected: one sign-in attempt, not two overlapping sheets or two sessions. Pinned by an **Apple**-button double-tap test, which genuinely exercises the `useRef` single-flight guard — `AppleAuthenticationButton` takes no `disabled` prop, so the guard is all that stops the second press. → Task 4.
+4. **Apple's `fullName` persists but `updateUser` fails** (offline right after the token exchange). Expected: the user is still signed in; the name is simply not stored. Covered for both failure shapes: a thrown rejection *and* a resolved `{ error }`, which is what supabase-js actually returns for an auth failure. → Task 3.
+5. **A provider error arrives while a previous password error is on screen.** Expected: a new attempt clears a stale error; a cancel adds none. → Task 4.
 
 ---
 

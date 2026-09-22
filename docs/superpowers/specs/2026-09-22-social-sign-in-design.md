@@ -4,7 +4,7 @@
 **Status:** draft for review
 **Ships as:** 1.2, after App Store version 1.0 is approved. No binary change while 1.0 is in review.
 
-**Decisions taken in brainstorming:** Apple + Google only (no Microsoft); accounts with the same email address are linked into one account; password sign-ups must confirm their email address first.
+**Decisions taken in brainstorming:** Apple + Google only (no Microsoft); accounts with the same email address are linked into one account; sign-up stays instant (no email confirmation), with the resulting risk accepted and documented in §4.
 
 ## 1. Goal
 
@@ -44,18 +44,17 @@ Apple returns `fullName` **only on the very first authorization** and never agai
 
 Apple requires the nonce sent to `signInAsync` to be the SHA-256 hash of the raw nonce, while Supabase must receive the **raw** value. The pair is generated per attempt with `expo-crypto`. Google's native SDK handles its own nonce; none is passed.
 
-## 4. Identity linking and the email-verification change
+## 4. Identity linking, and the risk we are accepting
 
-Supabase links identities automatically when the email address matches and is verified. That is the behaviour we want — one account whichever button you press — but it is only safe if password accounts are verified, otherwise someone who registers `victim@example.com` first would absorb the victim's Google identity (a pre-account-takeover).
+Supabase links identities automatically when the email address matches: sign up with a password as `you@example.com`, later tap *Continue with Google* as the same address, and both identities hang off one `auth.users` row with one set of ledgers. That is the behaviour we want, and it needs no code — it is Supabase's default.
 
-The project currently has email confirmation **off**: `signUp` returns a session immediately. This spec turns it **on**:
+**Sign-up stays instant.** Email confirmation remains off, so `signUp` returns a session immediately and nothing about today's onboarding changes. The reason confirmation was considered and rejected: Supabase's built-in mailer sends **2 emails per hour per project**, which is unusable in production, and replacing it means a third-party sending service plus DNS records on a domain — real setup work for a risk that is small at this stage.
 
-- New password sign-ups receive a confirmation email and cannot sign in until they click it. The sign-in screen shows "Check your email to confirm your account" instead of dropping into the app.
-- Apple and Google sign-ins are unaffected — those emails arrive verified from the provider.
-- Existing accounts are unaffected: rows already marked confirmed stay confirmed.
-- The demo reviewer account stays confirmed; App Review notes must drop the sentence that says no confirmation is required.
+**The accepted risk.** Because password accounts are auto-confirmed without anyone proving they own the address, an attacker who registers `victim@example.com` *before the victim ever opens the app* would own that account; if the victim later signs in with Google using that address, Supabase links them into the attacker's account, exposing whatever the victim then records. Exploiting it requires knowing the target's email, getting there first, and the target choosing Google afterwards.
 
-The confirmation email is sent by Supabase's built-in service, whose rate limits are low but adequate at this scale; the redirect target is the app's existing scheme, `propertyledger://`, so tapping the link reopens the app.
+Two things soften it: Apple's *Hide My Email* addresses are unique per app and cannot be pre-registered at all, and the app stores no payment details or documents — the loss is bookkeeping data.
+
+**How to close it later, in one step:** configure a custom SMTP sender (Resend's free tier plus DNS records on `trueorganichub.com` is enough) and switch **Confirm email** on in the Supabase dashboard. No app code changes; the sign-in screen already surfaces whatever error Supabase returns. Revisit when the app has real users.
 
 ## 5. Screen
 
@@ -94,7 +93,7 @@ Unchanged and still compliant: the edge function deletes the `auth.users` row, w
 | `expo-crypto` | SHA-256 for the Apple nonce. |
 | Apple Developer portal | App ID `com.trueorganichub.propertyledger` → enable the **Sign in with Apple** capability. |
 | Google Cloud console | OAuth consent screen + **iOS** client ID (bundle id) and a **Web** client ID (Supabase needs the web one as its Google client ID). |
-| Supabase dashboard | Enable Apple provider (authorized client id = bundle id) and Google provider (client id = web client id, plus the iOS client id in authorized clients); turn on **Confirm email**. |
+| Supabase dashboard | Enable Apple provider (authorized client id = bundle id) and Google provider (client id = web client id, plus the iOS client id in authorized clients). Confirm email stays **off** (§4). |
 
 Both new packages ship native code, so 1.2 requires a fresh EAS build — no OTA update can deliver it.
 
@@ -102,7 +101,7 @@ Both new packages ship native code, so 1.2 requires a fresh EAS build — no OTA
 
 - **Pure:** a `nonce.ts` helper (raw + SHA-256 pair) and a `providerError.ts` classifier (cancelled vs real failure) are pure functions with unit tests. The provider SDKs themselves are mocked at the module boundary in a sign-in screen render test that asserts the buttons appear, a cancel leaves no error on screen, and a failure shows one.
 - **Live, on device:** sign up fresh with Apple → app opens on the first-run chooser; sign out; sign in again with Apple → same ledgers. Repeat for Google. Then: create a password account with `x@gmail.com`, confirm the email, sign out, tap Continue with Google as the same address → same account, same ledgers (verified in the database: one `auth.users` row, two rows in `auth.identities`).
-- **Regression:** the existing email/password path, including a deliberately wrong password and the new "confirm your email" state.
+- **Regression:** the existing email/password path, including sign-up, a deliberately wrong password, and sign-out.
 
 ## 9. Out of scope
 
@@ -111,5 +110,5 @@ Facebook/Microsoft/X providers; phone or magic-link sign-in; unlinking an identi
 ## 10. Risks
 
 - **Google brand review.** Google's consent screen shows the Supabase project domain until the brand is verified; verification takes a few business days and should be started early, not at submission time.
-- **Confirmation email deliverability.** Supabase's shared sender can land in spam. If that shows up in testing, the fix is a custom SMTP sender, which is configuration, not code.
+- **Pre-registration takeover** (§4): accepted for now; closed later by enabling confirmation once a custom SMTP sender exists.
 - **Apple review.** Adding Sign in with Apple is expected and welcomed; the risk is the opposite case, shipping Google without it, which this spec avoids.

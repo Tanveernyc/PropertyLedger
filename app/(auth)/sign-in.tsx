@@ -1,6 +1,7 @@
 // Sign-in / sign-up screen (Phase 2). Validation happens locally first
 // (src/lib/auth-validation.ts); Supabase Auth errors surface below the form.
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -13,6 +14,13 @@ import {
 } from 'react-native';
 import { supabase } from '@/db/supabase';
 import { validateSignIn, type SignInValidation } from '@/lib/auth-validation';
+import {
+  configureGoogleSignIn,
+  isAppleSignInAvailable,
+  isGoogleSignInConfigured,
+  signInWithApple,
+  signInWithGoogle,
+} from '@/lib/social-auth';
 import { colors, type, ui } from '@/theme';
 
 type Mode = 'sign-in' | 'sign-up';
@@ -24,6 +32,33 @@ export default function SignInScreen() {
   const [fieldErrors, setFieldErrors] = useState<SignInValidation['errors']>({});
   const [authError, setAuthError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const [appleAvailable, setAppleAvailable] = useState(false);
+  const googleAvailable = isGoogleSignInConfigured();
+
+  useEffect(() => {
+    configureGoogleSignIn();
+    let cancelled = false;
+    isAppleSignInAvailable().then((available) => {
+      if (!cancelled) setAppleAvailable(available);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // One sheet at a time: a double tap must not open two sheets or create two sessions.
+  const runProvider = async (start: () => Promise<{ ok: boolean; outcome?: { kind: string; message?: string } }>) => {
+    if (submitting) return;
+    setAuthError(null);
+    setSubmitting(true);
+    const result = await start();
+    setSubmitting(false);
+    // ok: the session lands in SessionProvider and the root layout routes.
+    if (!result.ok && result.outcome?.kind === 'error') {
+      setAuthError(result.outcome.message ?? 'Sign-in failed. Please try again.');
+    }
+  };
 
   const submit = async () => {
     setAuthError(null);
@@ -55,6 +90,39 @@ export default function SignInScreen() {
         <Text style={styles.subtitle}>
           {mode === 'sign-in' ? 'Sign in to your ledger' : 'Create your account'}
         </Text>
+
+        {appleAvailable ? (
+          <AppleAuthentication.AppleAuthenticationButton
+            testID="apple-sign-in"
+            buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+            buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+            cornerRadius={10}
+            style={styles.appleButton}
+            onPress={() => {
+              runProvider(signInWithApple);
+            }}
+          />
+        ) : null}
+
+        {googleAvailable ? (
+          <Pressable
+            testID="google-sign-in"
+            style={styles.googleButton}
+            onPress={() => { runProvider(signInWithGoogle); }}
+            disabled={submitting}
+            accessibilityRole="button"
+          >
+            <Text style={styles.googleButtonText}>Continue with Google</Text>
+          </Pressable>
+        ) : null}
+
+        {appleAvailable || googleAvailable ? (
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+        ) : null}
 
         <TextInput
           style={styles.input}
@@ -118,4 +186,18 @@ const styles = StyleSheet.create({
   button: { ...ui.buttonPrimary, marginTop: 4 },
   buttonText: { ...ui.buttonPrimaryText },
   switchText: { ...ui.link, textAlign: 'center', marginTop: 8 },
+  appleButton: { height: 48 },
+  googleButton: {
+    height: 48,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  googleButtonText: { color: colors.ink, fontSize: 16, fontWeight: '600' },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginVertical: 4 },
+  dividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: colors.line },
+  dividerText: { ...type.hint },
 });

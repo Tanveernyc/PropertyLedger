@@ -22,6 +22,14 @@ Money is `numeric(12,2)` in Postgres and integer-cent math in the app. Dates are
 
 **Personal budgets.** A budget is a ledger with `property_type = 'personal'`; everything else (entries, recurring rules, reports, export) is the same engine. What changes is the wording and the category list: a budget is called a *Budget*, its counterparties are *Payee*/*Source* instead of *Vendor*/*Source*, and its category picker shows the personal set (Salary, Groceries, Dining Out, Fuel, Subscriptions, Phone, Rent/Mortgage, …) plus shared ones like Insurance and Repairs; rental ledgers keep the landlord set. New categories you create take the scope of the ledger you are in. The dashboard and **Reports** add a *This Month* / *Last Month* preset and a **savings rate** line (income minus expenses, as a share of income) for budgets. An account with only rental properties keeps its Property/Properties wording throughout; the kind picker on the ledger form and the month line on the dashboard are the only additions it sees.
 
+Behaviour notes for budgets (decisions made while building, so nobody re-litigates them):
+- **First run.** A signed-in account with no ledgers at all is taken to a chooser: *A rental property* / *My own budget* / *Both*. It creates the ledger(s) with default names ("My first property", "Household") and is safe to retry - a ledger whose name already exists is not created twice.
+- **Switching a ledger's kind.** Turning a rental into a budget hides the address and purchase fields but keeps their values; switch back and they reappear. Nothing is cleared silently.
+- **Categories you created before scopes existed** are visible on every ledger kind. New ones take the scope of the ledger you create them from (the Categories screen lets you pick Shared / Rental / Personal).
+- **Reports** shows the savings rate under Net for budgets; there is no separate "Saved" row because it would repeat Net.
+- **Recurring rules** on a budget copy the rule's payee/source onto each posted month, exactly like a rental's vendor.
+
+
 **Log a one-off entry.** **Add** tab → choose *Expense* or *Income* → tap the property → tap a category (tap **+ New** to create one on the spot) → amount → date defaults to today → optional vendor/source, covers-period, notes → **Save**. The form keeps the property and category selected so the next entry is amount + save.
 
 **Set up a monthly bill or rent.** On the **Add** tab tap *Repeats every month? Set up a recurring…*, or from a property tap **Recurring → + Expense rule / + Income rule**. Pick property, category, monthly amount, vendor/source, the **start month**, and whether it runs *until I stop it* or *for N months*. Save: every month from the start month through today is posted at once (the form shows how many), and each new month posts automatically when the app opens. Recurring entries show a ↻ mark.
